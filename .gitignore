@@ -1,1 +1,20 @@
 .DS_Store
+images
+env
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# all image files
+theory/*.pgm
+theory/*.jpg
+theory/*.ppm
+theory/*.png
+theory/*.jpeg
+src/*.pgm
+src/*.jpg
+src/*.ppm
+src/*.png
+src/*.jpeg
