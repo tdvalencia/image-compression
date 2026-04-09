@@ -1,6 +1,6 @@
 import codec_tools as ct
 import numpy as np
-from scipy.fftpack import dctn, idctn
+from scipy.fft import dctn, idctn
 from PIL import Image
 
 BLOCK_SIZE = 8
@@ -22,15 +22,16 @@ if __name__ == '__main__':
     mask[:N, :N] = 1
 
     # apply the mask (NumPy broadcasting automatically applies the 2D mask to all 3 color channels)
-    masked_dct_blocks = dct_blocks * mask
+    masked_dct_blocks = np.asarray(dct_blocks) * mask
 
     # Inverse DCT
     idct_blocks = idctn(masked_dct_blocks, axes=(3, 4), norm='ortho')
 
     # Reshape back to the standard 3D image format (H, W, C)
     H, W, C = image.shape
-    reconstructed_image = idct_blocks.transpose(0, 3, 1, 4, 2).reshape(H, W, C)
+    reconstructed_image = np.asarray(idct_blocks).transpose(0, 3, 1, 4, 2).reshape(H, W, C)
 
+    # view the original and compressed images side by side
     ct.plot_zoomed_comparison(image, reconstructed_image, title=f'Compressed Image (N={N})')
 
     img = Image.fromarray((reconstructed_image * 255).astype(np.uint8))
