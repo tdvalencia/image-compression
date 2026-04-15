@@ -1,7 +1,8 @@
-import src.codec_tools as ct
-import src.encoders.run_length as rle
+import codec.tools as ct
+import codec.encoders.run_length as rle
 import numpy as np
 from scipy.fft import idctn
+import codec.metrics as metrics
 
 BLOCK_SIZE = 8
 
@@ -61,6 +62,12 @@ if __name__ == '__main__':
     # 8. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)
     original_image = ct.load_and_preprocess_image('images/rgb16bit/deer.ppm', block_size=BLOCK_SIZE)
     original_image = original_image[:H, :W, :]
+
+    # 9. EVALUATE METRICS
+    psnr_value = metrics.psnr(original_image, final_image)
+    ssim_value = metrics.ssim(original_image, final_image)
+    print(f"PSNR: {psnr_value:.2f} dB")
+    print(f"SSIM: {ssim_value:.4f}")
 
     # 10. VIEW RESULTS
     # Matplotlib cannot render uint16. We must convert the arrays to 0.0 - 1.0 floats strictly for the plotter!

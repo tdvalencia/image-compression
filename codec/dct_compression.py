@@ -1,9 +1,9 @@
-import src.codec_tools as ct
+import codec.tools as ct
 import numpy as np
 from scipy.fft import dctn
-import src.encoders.run_length as rle
-import src.encoders.arithmetic as ae
-import src.encoders.huffman as hf
+import codec.encoders.run_length as rle
+import codec.encoders.arithmetic as ae
+import codec.encoders.huffman as hf
 
 BLOCK_SIZE = 8
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     print(f"Total RLE tuples generated: {len(rle_blocks)}")
 
-    # arithmetic encode the RLE output
+    # entropy encode the RLE output
     compressed_bits, symbol_counts = hf.encode_rle(rle_blocks)
     saved_metadata = {
         'symbol_counts': symbol_counts

@@ -6,9 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, color, util
 import pickle
-import src.encoders.arithmetic as ae
-import src.encoders.run_length as rle
-import src.encoders.huffman as hf
+import codec.encoders.arithmetic as ae
+import codec.encoders.run_length as rle
+import codec.encoders.huffman as hf
 
 def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
     '''Loads an RGB image, converts to float, and crops to fit the block size.'''
