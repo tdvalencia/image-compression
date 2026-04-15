@@ -1,32 +1,16 @@
-from itertools import groupby
-from collections import Counter
 from arithmetic_compressor import AECompressor
 from arithmetic_compressor.models import StaticModel
+from collections import Counter
 
-def run_length_encode(data):
-    """
-    A highly compact, generalized RLE function.
-    Works on strings, lists, tuples, or any iterable.
-    """
-    # groupby groups consecutive identical elements. 
-    # We turn the group into a list to get its length.
-    return [(len(list(group)), key) for key, group in groupby(data)]
-
-def run_length_decode(rle_data):
-    """
-    Inverse of run_length_encode.
-    Expects an iterable of (count, value) pairs and expands them.
-    """
-    out = []
-    for count, val in rle_data:
-        out.extend([val] * int(count))
-    return out
-
-def arithmetic_encode_rle(rle_data):
+def encode_rle(rle_data):
+    '''
+    Takes RLE data (a list of (count:int, val:int) pairs) and compresses it using arithmetic coding.
+    Returns a tuple of (compressed_bits:list of int, probabilities:dict, total_symbols:int
+    '''
     # 1. Format the data
     # The arithmetic compressor needs discrete, hashable symbols.
-    # We will convert our RLE tuples into simple strings (e.g., (1, 150) -> "1_150")
-    string_symbols = [f"{count}_{val}" for count, val in rle_data]
+    # We will convert our RLE tuples into simple strings (e.g., (1, 150) -> '1_150')
+    string_symbols = [f'{count}_{val}' for count, val in rle_data]
     
     # 2. Calculate the exact probability of every symbol
     # The compressor needs to know exactly how often each symbol appears to build the math
@@ -44,17 +28,31 @@ def arithmetic_encode_rle(rle_data):
     
     return compressed_bits, probabilities, total_symbols
 
-def arithmetic_decode_rle(compressed_bits, probabilities, total_symbols):
-    """
+def decode_rle(compressed_bits, probabilities, total_symbols):
+    '''
     Inverse of arithmetic_encode_rle.
     Returns RLE data as a list of (count:int, val:int) pairs.
-    """
+    '''
     model = StaticModel(probabilities)
     coder = AECompressor(model)
     string_symbols = coder.decompress(compressed_bits, total_symbols)
 
     rle_data = []
     for sym in string_symbols:
-        count_str, val_str = sym.split("_", 1)
-        rle_data.append((int(count_str), int(val_str)))
+        count_str, val_str = sym.split('_', 1)
+        
+        # 1. Safely handle the EOB string trap
+        if count_str == 'EOB':
+            count = 'EOB'
+        else:
+            count = int(count_str)
+            
+        # 2. The Bulletproof Value extraction
+        try:
+            val = int(val_str)
+        except ValueError:
+            # If it's '1.0' or '0.943', turn it into a float, then squash it to an int
+            val = int(float(val_str)) 
+
+        rle_data.append((count, val))
     return rle_data
