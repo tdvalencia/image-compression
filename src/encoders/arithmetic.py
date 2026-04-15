@@ -4,13 +4,13 @@ from collections import Counter
 
 def encode_rle(rle_data):
     '''
-    Takes RLE data (a list of (count:int, val:int) pairs) and compresses it using arithmetic coding.
+    Takes RLE data (a list of (val:int, count:int) pairs) and compresses it using arithmetic coding.
     Returns a tuple of (compressed_bits:list of int, probabilities:dict, total_symbols:int
     '''
     # 1. Format the data
     # The arithmetic compressor needs discrete, hashable symbols.
     # We will convert our RLE tuples into simple strings (e.g., (1, 150) -> '1_150')
-    string_symbols = [f'{count}_{val}' for count, val in rle_data]
+    string_symbols = [f'{val}_{count}' for val, count in rle_data]
     
     # 2. Calculate the exact probability of every symbol
     # The compressor needs to know exactly how often each symbol appears to build the math
@@ -31,7 +31,7 @@ def encode_rle(rle_data):
 def decode_rle(compressed_bits, probabilities, total_symbols):
     '''
     Inverse of arithmetic_encode_rle.
-    Returns RLE data as a list of (count:int, val:int) pairs.
+    Returns RLE data as a list of (val:int, count:int) pairs.
     '''
     model = StaticModel(probabilities)
     coder = AECompressor(model)
@@ -54,5 +54,5 @@ def decode_rle(compressed_bits, probabilities, total_symbols):
             # If it's '1.0' or '0.943', turn it into a float, then squash it to an int
             val = int(float(val_str)) 
 
-        rle_data.append((count, val))
+        rle_data.append((val, count))
     return rle_data

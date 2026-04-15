@@ -8,6 +8,7 @@ from skimage import io, color, util
 import pickle
 import src.encoders.arithmetic as ae
 import src.encoders.run_length as rle
+import src.encoders.huffman as hf
 
 def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
     '''Loads an RGB image, converts to float, and crops to fit the block size.'''
@@ -20,7 +21,7 @@ def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
     elif img.shape[2] == 4:
         img = color.rgba2rgb(img)
 
-    img = util.img_as_float(img)
+    img = util.img_as_uint(img)
 
     # Crop to ensure dimensions are exactly divisible by the block size
     H, W, C = img.shape
@@ -57,68 +58,63 @@ def unblock_image(blocks: np.ndarray, image_shape: tuple) -> np.ndarray:
 
     return img_cropped
 
-def save_uofm_container(filename, original_shape, encoder_type, encoder_metadata, compressed_bits):
+def save_uofm_container(filename, shape, encoder_type, encoder_metadata, compressed_data):
     '''
-    A universal container that saves compressed data regardless of the algorithm used.
+    Universal container that handles both dahuffman (bytes) and Arithmetic (bit list).
     '''
-    print(f'Packaging {encoder_type.upper()} data for {filename}...')
-    
-    # 1. Pack the bits into bytes
-    bit_string = ''.join(str(b) for b in compressed_bits)
-    padding_length = (8 - (len(bit_string) % 8)) % 8
-    bit_string += '0' * padding_length
-    byte_array = bytearray(int(bit_string[i:i+8], 2) for i in range(0, len(bit_string), 8))
+    # 1. If the data is already packed into bytes (like from dahuffman), no math needed!
+    if isinstance(compressed_data, bytes):
+        raw_bytes = compressed_data
+        padding = 0
+    else:
+        # 2. If it's a list of bits from Arithmetic Encoding, we manually pack it
+        if isinstance(compressed_data, list):
+            compressed_data = "".join(str(b) for b in compressed_data)
+            
+        padding = 8 - (len(compressed_data) % 8)
+        if padding == 8: 
+            padding = 0
+            
+        padded_bit_string = compressed_data + ("0" * padding)
+        raw_bytes = bytearray(int(padded_bit_string[i:i+8], 2) for i in range(0, len(padded_bit_string), 8))
 
-    # 2. Build the Universal Container Payload
+    # 3. Assemble and save the payload
     payload = {
-        'signature': 'UOFM_CONTAINER_V2', 
-        'shape': original_shape,      
-        'encoder_type': encoder_type,         # e.g., 'huffman', 'ans', 'arithmetic'
-        'encoder_metadata': encoder_metadata, # flexible dictionary for any extra info the encoder needs to decode (e.g., probability tables)
-        'padding': padding_length,    
-        'data': byte_array            
+        'signature': 'UOFM_CONTAINER_V2',
+        'shape': shape,
+        'padding': padding,
+        'encoder_type': encoder_type,
+        'encoder_metadata': encoder_metadata,
+        'data': raw_bytes
     }
 
-    # 3. Save it
     with open(filename, 'wb') as file:
-        pickle.dump(payload, file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(payload, file)
 
 def load_uofm_container(filename):
     with open(filename, 'rb') as file:
         payload = pickle.load(file)
         
-    if payload.get('signature') != 'UOFM_CONTAINER_V2':
-        raise ValueError("Unrecognized file format!")
-        
-    # 1. Unpack the universal data
     shape = payload['shape']
     encoder_type = payload['encoder_type']
     metadata = payload['encoder_metadata']
-    
-    # 2. Unpack the bytes back into bits
     raw_bytes = payload['data']
-    bit_string = "".join(f"{byte:08b}" for byte in raw_bytes)
-    if payload['padding'] > 0:
-        bit_string = bit_string[:-payload['padding']]
-    bit_list = [int(b) for b in bit_string]
     
-    # 3. Route the data to the correct Decoder based on the flag!
     if encoder_type == 'huffman':
-        print("Detected Huffman encoding. Booting Huffman decoder...")
-        tree = metadata['huffman_tree']
-        # decoded_rle = run_huffman_decoder(bit_list, tree)
-        
+        # Parse the strings ('val_count') back into RLE tuples ((val, count))
+        decoded_rle = hf.decode_rle(raw_bytes, metadata['symbol_counts'])
+            
     elif encoder_type in ['arithmetic', 'ans']:
-        print(f"Detected {encoder_type.upper()} encoding. Booting fractional decoder...")
-        probs = metadata['probabilities']
+        # Unpack the bytes back to bits just like you normally do for AE
+        bit_string = "".join(f"{byte:08b}" for byte in raw_bytes)
+        if payload['padding'] > 0:
+            bit_string = bit_string[:-payload['padding']]
+        bit_list = [int(b) for b in bit_string]
+        
+        probabilities = metadata['probabilities']
         totals = metadata['total_symbols']
-        decoded_rle = ae.decode_rle(bit_list, probs, totals)
+        decoded_rle = ae.decode_rle(bit_list, probabilities, totals)
         
-    else:
-        raise ValueError(f"I don't know how to decode: {encoder_type}")
-        
-    # Return the decoded RLE array and the shape so the rest of your pipeline 
-    # (Inverse ZigZag -> IDCT) can finish the job!
     return shape, decoded_rle
 
 def plot_zoomed_comparison(original, compressed, title, zoom_size=(1000, 1500)):

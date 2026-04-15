@@ -41,7 +41,7 @@ def encode(data):
     '''
     # groupby groups consecutive identical elements. 
     # We turn the group into a list to get its length.
-    return [(len(list(group)), key) for key, group in groupby(data)]
+    return [(key, len(list(group))) for key, group in groupby(data)]
 
 def decode(rle_data):
     '''
@@ -49,7 +49,7 @@ def decode(rle_data):
     Expects an iterable of (count, value) pairs and expands them.
     '''
     out = []
-    for count, val in rle_data:
+    for val, count in rle_data:
         out.extend([val] * int(count))
     return out
 
@@ -60,7 +60,7 @@ def decode_master_rle_list(rle_tuples):
     """
     flat_frequencies = []
     
-    for count, val in rle_tuples:
+    for val, count in rle_tuples:
         if count == 'EOB':
             # Calculate how many numbers are currently in our flat list
             current_length = len(flat_frequencies)

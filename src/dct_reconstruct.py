@@ -37,28 +37,33 @@ if __name__ == '__main__':
         (num_blocks_y, num_blocks_x, C, BLOCK_SIZE, BLOCK_SIZE)
     )
 
-    # 5. INVERSE DCT
-    # This is the magic! Convert the math back into colors.
+    # 5. DEQUANTIZATION
+    # Multiply by the same quantization factor used in compression to restore scale
+    q_matrix = np.zeros((BLOCK_SIZE, BLOCK_SIZE))
+    for i in range(BLOCK_SIZE):
+        for j in range(BLOCK_SIZE):
+            q_matrix[i, j] = 1000 + (i + j) * 4000
+    q_matrix[0, 0] = 8000
+    restored_frequencies = blocked_frequencies * q_matrix
+
+    # 6. INVERSE DCT
     # norm='ortho' must match what you used in the encoder exactly
-    raw_pixel_blocks = np.asarray(idctn(blocked_frequencies, axes=(3, 4), norm='ortho'))
+    # round and clip to valid pixel range after IDCT
+    raw_floats = np.asarray(idctn(restored_frequencies, axes=(3, 4), norm='ortho'))
+    raw_pixel_blocks = np.clip(np.round(raw_floats), 0, 65535).astype(np.uint16)
 
-    # 6. UNBLOCK THE IMAGE
-    reconstructed_image_floats = ct.unblock_image(raw_pixel_blocks, image_shape=shape)
+    # 7. UNBLOCK THE IMAGE
+    reconstructed_image = ct.unblock_image(raw_pixel_blocks, image_shape=shape)
+    final_image = np.clip(reconstructed_image, 0, 65535).astype(np.uint16)
 
-    # 7. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)
+    print(f"Max reconstructed pixel: {reconstructed_image.max()}")
+
+    # 8. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)
     original_image = ct.load_and_preprocess_image('images/rgb16bit/deer.ppm', block_size=BLOCK_SIZE)
-    max_val = original_image.max()
+    original_image = original_image[:H, :W, :]
 
-    # 8. THE DYNAMIC FINAL POLISH
-    if max_val <= 1.0:
-        # It's a normalized float image (0.0 to 1.0)
-        final_image = np.clip(reconstructed_image_floats, 0.0, 1.0)
-    elif max_val > 255:
-        # It's a 16-bit integer image (0 to 65535)
-        final_image = np.clip(np.round(reconstructed_image_floats), 0, 65535).astype(np.uint16)
-    else:
-        # It's a standard 8-bit image (0 to 255)
-        final_image = np.clip(np.round(reconstructed_image_floats), 0, 255).astype(np.uint8)
-
-    # 9. VIEW RESULTS
-    ct.plot_zoomed_comparison(original_image, final_image, title='Reconstructed Compressed Image')
+    # 10. VIEW RESULTS
+    # Matplotlib cannot render uint16. We must convert the arrays to 0.0 - 1.0 floats strictly for the plotter!
+    display_original = original_image.astype(np.float32) / 65535.0
+    display_reconstructed = final_image.astype(np.float32) / 65535.0
+    ct.plot_zoomed_comparison(display_original, display_reconstructed, title='Reconstructed Compressed Image')
