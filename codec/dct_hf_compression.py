@@ -30,7 +30,7 @@ if __name__ == '__main__':
     quantized_dct_blocks = np.round(dct_blocks / q_matrix).astype(np.int32)
 
     # mask to keep the top-left NxN coefficients (lowest frequency) of each block
-    N = 3
+    N = 8
     mask = np.zeros((BLOCK_SIZE, BLOCK_SIZE))
     mask[:N, :N] = 1
 

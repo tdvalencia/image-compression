@@ -1,36 +1,68 @@
+'''
+    Arithmetic coding implementation for compressing RLE data from DCT blocks.
+    This module provides functions to encode RLE data into a compressed bitstream
+    and to decode it back to the original RLE format.
+
+    Does not handle large images well, we are running into floating point precision
+    issues with the probabilities.
+'''
+
+from collections import Counter
 from arithmetic_compressor import AECompressor
-from arithmetic_compressor.models import BaseFrequencyTable
+from arithmetic_compressor.util import Range
+from arithmetic_compressor.models import StaticModel
+import numpy as np
+
+class ExactStaticModel:
+    def __init__(self, symbol_counts):
+        self.symbol_counts = dict(symbol_counts)
+        self.total = sum(symbol_counts.values())
+        # Use np.float64 or np.float128 for higher precision
+        self.__prob = {sym: np.float64(cnt) / np.float64(self.total) for sym, cnt in self.symbol_counts.items()}
+        self.cdf_object = {}
+        prev = 0
+        for sym, cnt in self.symbol_counts.items():
+            self.cdf_object[sym] = Range(prev, prev + cnt)
+            prev += cnt
+
+    def cdf(self):
+        return self.cdf_object
+
+    def probability(self):
+        return self.__prob
+
+SCALE_FACTOR = 65536
 
 def encode_rle(rle_data):
-    '''
-    Takes RLE data as a list of (value, count) tuples.
-    Uses an Adaptive Model with Fat Initialization.
-    '''
     # 1. Format data securely into value_count
     string_symbols = [f'{val}_{count}' for val, count in rle_data]
-            
-    # 2. Get the unique alphabet
-    unique_symbols = list(set(string_symbols))
-
-    # 3. Fat Initialization (1000 weight) to prevent halving bug
-    initial_weights = {sym: 1000 for sym in unique_symbols}
     
-    # 4. Compress
-    model = BaseFrequencyTable(initial_weights)
-    coder = AECompressor(model)
+    # 2. Build exact symbol counts from the RLE stream
+    raw_counts = Counter(string_symbols)
+    total = sum(raw_counts.values())
+
+    # 3. Scale counts to a fixed total (65536) for better precision
+    SCALE_TOTAL = 65536
+    symbol_counts = {}
+    for sym, cnt in raw_counts.items():
+        symbol_counts[sym] = max(1, round(cnt / total * SCALE_TOTAL))
+
+    # 4. Pass scaled counts to ExactStaticModel, compress the sequence
+    model = ExactStaticModel(symbol_counts)
+    coder = AECompressor(model, adapt=False)
     compressed_bits = coder.compress(string_symbols)
     
-    return compressed_bits, initial_weights, len(string_symbols)
+    return compressed_bits, symbol_counts, len(string_symbols)
 
 
-def decode_rle(compressed_bits, initial_weights, total_symbols):
+def decode_rle(compressed_bits, symbol_counts, total_symbols):
     '''
     Inverse of encode_rle.
     Returns RLE data as a list of (value, count) tuples.
     '''
-    # 1. Load the adaptive model
-    model = BaseFrequencyTable(initial_weights)
-    coder = AECompressor(model)
+    # 1. Load the same static model used for encoding
+    model = ExactStaticModel(symbol_counts)
+    coder = AECompressor(model, adapt=False)
     
     # 2. Decompress bits back to 'value_count' strings
     string_symbols = coder.decompress(compressed_bits, total_symbols)
