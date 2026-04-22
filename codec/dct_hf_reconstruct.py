@@ -3,6 +3,7 @@ import codec.encoders.run_length as rle
 import numpy as np
 from scipy.fft import idctn
 import codec.metrics as metrics
+import os
 
 BLOCK_SIZE = 8
 
@@ -45,7 +46,7 @@ if __name__ == '__main__':
         for j in range(BLOCK_SIZE):
             q_matrix[i, j] = 1000 + (i + j) * 4000
     q_matrix[0, 0] = 8000
-    restored_frequencies = blocked_frequencies * q_matrix
+    restored_frequencies = blocked_frequencies * q_matrix 
 
     # 6. INVERSE DCT
     # norm='ortho' must match what you used in the encoder exactly
@@ -63,14 +64,23 @@ if __name__ == '__main__':
     original_image = ct.load_and_preprocess_image('images/rgb16bit/deer.ppm', block_size=BLOCK_SIZE)
     original_image = original_image[:H, :W, :]
 
-    # 9. EVALUATE METRICS
-    psnr_value = metrics.psnr(original_image, final_image)
-    ssim_value = metrics.ssim(original_image, final_image)
+    # Matplotlib and skimage.metrics dont like uint16. We must convert the arrays to 0.0 - 1.0 floats
+    original_float_norm = original_image.astype(np.float32) / 65535.0
+    reconstructed_float_norm = final_image.astype(np.float32) / 65535.0
+
+    # 9. EVALUATE METRICS AND VISUALIZE
+    psnr_value = metrics.psnr(original_float_norm, reconstructed_float_norm)
+    ssim_value = metrics.ssim(original_float_norm, reconstructed_float_norm)
     print(f"PSNR: {psnr_value:.2f} dB")
     print(f"SSIM: {ssim_value:.4f}")
 
+    # compression ratio
+    original_size = H * W * C * 2  # 2 bytes per pixel in 16-bit RGB
+    compressed_size = os.path.getsize('deer_compressed.uofm')
+    compression_ratio = original_size / compressed_size
+    print(f"Original size: {original_size} bytes")
+    print(f"Compressed size: {compressed_size} bytes")
+    print(f"Compression Ratio: {compression_ratio:.2f}:1")
+
     # 10. VIEW RESULTS
-    # Matplotlib cannot render uint16. We must convert the arrays to 0.0 - 1.0 floats strictly for the plotter!
-    display_original = original_image.astype(np.float32) / 65535.0
-    display_reconstructed = final_image.astype(np.float32) / 65535.0
-    ct.plot_zoomed_comparison(display_original, display_reconstructed, title='Reconstructed Compressed Image')
+    ct.plot_zoomed_comparison(original_float_norm, reconstructed_float_norm, title='Reconstructed Compressed Image')

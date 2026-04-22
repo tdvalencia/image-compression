@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 from skimage import io, color, util
 import pickle
 import codec.encoders.arithmetic as ae
-import codec.encoders.run_length as rle
-import codec.encoders.huffman as hf
+import codec.encoders.ans as ans
+from simple_ans import EncodedSignal
 
 def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
-    '''Loads an RGB image, converts to float, and crops to fit the block size.'''
+    '''Loads an RGB image, converts to 16-bit, and crops to fit the block size.'''
     img: np.ndarray = io.imread(filepath)
 
     # If the image is grayscale, convert it to RGB so our 3-channel math works
@@ -21,7 +21,7 @@ def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
     elif img.shape[2] == 4:
         img = color.rgba2rgb(img)
 
-    img = util.img_as_uint(img)
+    img = util.img_as_uint(img) # consider switching to 8-bit: img_as_ubyte(img)
 
     # Crop to ensure dimensions are exactly divisible by the block size
     H, W, C = img.shape
@@ -62,10 +62,12 @@ def save_uofm_container(filename, shape, encoder_type, encoder_metadata, compres
     '''
     Universal container that handles both dahuffman (bytes) and Arithmetic (bit list).
     '''
-    # 1. If the data is already packed into bytes (like from dahuffman), no math needed!
+    # 1. If the data is already packed into bytes (like from dahuffman or ANS)
     if isinstance(compressed_data, bytes):
-        raw_bytes = compressed_data
-        padding = 0
+        # Pad bytes to make length divisible by 4 (for uint32)
+        remainder = len(compressed_data) % 4
+        padding = (4 - remainder) % 4  # 0 if already divisible, otherwise 1-3
+        raw_bytes = compressed_data + (b'\x00' * padding)
     else:
         # 2. If it's a list of bits from Arithmetic Encoding, we manually pack it
         if isinstance(compressed_data, list):
@@ -102,19 +104,45 @@ def load_uofm_container(filename):
     
     if encoder_type == 'huffman':
         # Parse the strings ('val_count') back into RLE tuples ((val, count))
+        from codec.encoders import huffman as hf
         decoded_rle = hf.decode_rle(raw_bytes, metadata['symbol_counts'])
             
-    elif encoder_type in ['arithmetic', 'ans']:
+    elif encoder_type == 'arithmetic':
         # Unpack the bytes back to bits just like you normally do for AE
         bit_string = "".join(f"{byte:08b}" for byte in raw_bytes)
         if payload['padding'] > 0:
             bit_string = bit_string[:-payload['padding']]
         bit_list = [int(b) for b in bit_string]
         
-        probabilities = metadata['probabilities']
+        symbol_counts = metadata['symbol_counts']
         totals = metadata['total_symbols']
-        decoded_rle = ae.decode_rle(bit_list, probabilities, totals)
+        decoded_rle = ae.decode_rle(bit_list, symbol_counts, totals)
+
+    elif encoder_type == 'ans':
+        print(f"Raw bytes length from pickle: {len(raw_bytes)}")
+        print(f"Padding from payload: {payload['padding']}")
+        print(f"Bytes length from metadata: {metadata['bytes_length']}")
         
+        # Use the exact bytes_length stored in metadata
+        bytes_length = metadata['bytes_length']
+        actual_bytes = raw_bytes[:bytes_length]
+        
+        print(f"Actual bytes length after extraction: {len(actual_bytes)}, divisible by 4: {len(actual_bytes) % 4 == 0}")
+        
+        words_length = metadata['words_length']
+        # Use uint32, not uint64!
+        words = np.frombuffer(actual_bytes, dtype=np.uint32)[:words_length]
+        
+        encoded_signal = EncodedSignal(
+            state=np.uint64(metadata['state']),
+            symbol_counts=metadata['counts'],
+            symbol_values=metadata['values'],
+            signal_length=metadata['length'],
+            words=words
+        )
+        
+        decoded_rle = ans.decode_rle(encoded_signal)
+
     return shape, decoded_rle
 
 def plot_zoomed_comparison(original, compressed, title, zoom_size=(1000, 1500)):
