@@ -1,6 +1,5 @@
 import codec.tools as ct
 import numpy as np
-import matplotlib.pyplot as plt
 from skimage import io, color, util
 import codec.encoders.run_length as rle
 import codec.metrics as metrics
@@ -10,7 +9,7 @@ if __name__ == '__main__':
     # shape is the original image tuple, e.g., (Height, Width, Channels)
     shape, decoded_rle_tuples = ct.load_uofm_container('deer_compressed.uofm')
     H, W, C = shape
-    k = 200
+    k = 400
 
     # 2. RLE DECODE
     # Expand [(1, 145), (63, 0)] back out into [145, 0, 0, 0...]
@@ -19,31 +18,23 @@ if __name__ == '__main__':
 
     print(f"Total frequencies decoded: {len(flat_data)}")
 
-    # 3. INVERSE ZIG-ZAG
-    #reconstructed_image = rle.unflatten(flat_data)
-
-    #print(f"Max reconstructed pixel: {reconstructed_image.max()}")
-
-    # 4. RECONSTRUCT CHANNELS
+    # 3. RECONSTRUCT CHANNELS
     reconstructed_channels = []
     idx = 0
 
     for c in range(C):
         # U
         U_size = H * k
-        U_k = flat_data[idx:idx + U_size]
-        np.array(U_k).reshape(H, k)
+        U_k = np.array(flat_data[idx:idx + U_size]).reshape(H, k)
         idx += U_size
 
         # S
-        S_k = flat_data[idx:idx + k]
-        np.array(S_k)
+        S_k = np.array(flat_data[idx:idx + k])
         idx += k
 
         # Vt
         Vt_size = k * W
-        Vt_k = flat_data[idx:idx + Vt_size]
-        np.array(Vt_k).reshape(H, k).reshape(k, W)
+        Vt_k = np.array(flat_data[idx:idx + Vt_size]).reshape(k, W)
         idx += Vt_size
 
         # Reconstruct channel
@@ -53,8 +44,10 @@ if __name__ == '__main__':
     # --- Combine channels ---
     reconstructed_image = np.stack(reconstructed_channels, axis=2)
 
+    # Clip values to valid image range
+    reconstructed_image = np.clip(reconstructed_image, 0, 65535).astype(np.uint16)
 
-    # 5. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)
+    # 4. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)
     # Load image
     img: np.ndarray = io.imread('theory/deer.ppm')
 
@@ -67,19 +60,15 @@ if __name__ == '__main__':
 
     original_image = util.img_as_uint(img)
 
+    # 5. EVALUATE METRICS
+    original_float_norm = original_image.astype(np.float32) / 65535.0
+    reconstructed_float_norm = reconstructed_image.astype(np.float32) / 65535.0
 
-    # Ensure image is (H, W, 3)
-    original_image = img.astype(np.float64)
-    original_image = original_image[:H, :W, :]
-
-    # 6. EVALUATE METRICS
-    psnr_value = metrics.psnr(original_image, reconstructed_image)
-    ssim_value = metrics.ssim(original_image, reconstructed_image)
+    psnr_value = metrics.psnr(original_float_norm, reconstructed_float_norm)
+    ssim_value = metrics.ssim(original_float_norm, reconstructed_float_norm)
     print(f"PSNR: {psnr_value:.2f} dB")
     print(f"SSIM: {ssim_value:.4f}")
 
-    # 7. VIEW RESULTS
-    # Matplotlib cannot render uint16. We must convert the arrays to 0.0 - 1.0 floats strictly for the plotter!
-    display_original = original_image.astype(np.float32) / 65535.0
-    display_reconstructed = reconstructed_image.astype(np.float32) / 65535.0
-    ct.plot_zoomed_comparison(display_original, display_reconstructed, title='Reconstructed Compressed Image')
+    # 6. VIEW RESULTS
+    # Matplotlib cannot render uint16. Using normalized floats above for display.
+    ct.plot_zoomed_comparison(original_float_norm, reconstructed_float_norm, title='Reconstructed Compressed Image')

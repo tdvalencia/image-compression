@@ -1,10 +1,7 @@
-
 import codec.tools as ct
 import numpy as np
-import matplotlib.pyplot as plt
 from skimage import io, color, util
 import codec.encoders.run_length as rle
-import codec.encoders.arithmetic as ae
 import codec.encoders.huffman as hf
 
 if __name__ == '__main__':
@@ -20,11 +17,10 @@ if __name__ == '__main__':
 
     img = util.img_as_uint(img)
 
-
     # Ensure image is (H, W, 3)
     image = img.astype(np.float64)
 
-    k = 200  # compression level (tune this)
+    k = 400  # compression level (tune this)
 
     compressed_channels = []
     reconstructed_channels = []
