@@ -1,3 +1,7 @@
+'''
+    Asymmetric Numeral Systems (ANS) Encoder and Decoder for RLE Data
+'''
+
 import numpy as np
 from simple_ans import ans_encode, ans_decode
 

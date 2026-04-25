@@ -7,6 +7,10 @@ __pycache__/
 *.pyo
 *.pyd
 
+# compressed files
+compressed_outputs/
+*.uofm
+
 # all image files
 theory/*.pgm
 theory/*.jpg

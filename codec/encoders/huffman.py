@@ -1,3 +1,7 @@
+'''
+    Huffman Encoder and Decoder for RLE Data
+'''
+
 from dahuffman import HuffmanCodec
 from collections import Counter
 
