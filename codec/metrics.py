@@ -15,21 +15,11 @@ def psnr(original, reconstructed):
     return psnr_value
 
 def ssim(original, reconstructed):
-    # Determine the smaller spatial dimension (H or W)
-    min_side = min(original.shape[:2])
-    # Set win_size: must be odd, ≤ min_side, and ≤ 11 (default max)
-    win_size = min(11, min_side if min_side % 2 == 1 else min_side - 1)
+    # Compute SSIM with proper data range for normalized images
     # Use channel_axis for multichannel images (axis 2 for (H, W, C))
-    return ssim_metric(original, reconstructed, data_range=1.0, channel_axis=2)
+    return ssim_metric(original, reconstructed, data_range=1.0, channel_axis=2, win_size=11)
 
 def compression_ratio(original_size, compressed_size):
     if compressed_size == 0:
         return float('inf')  # Avoid division by zero
     return original_size / compressed_size
-
-def comparing_to_jpeg(original, reconstructed):
-    # TODO: look at data types and consider if that effects metrics
-    jpeg = Image.fromarray((original * 255).astype(np.uint8))
-    jpeg.save('temp.jpg', 'JPEG', quality=75)  # Save with a standard quality level
-    jpeg_reconstructed = np.array(Image.open('temp.jpg')) / 255.0
-    return psnr(original, jpeg_reconstructed), ssim(original, jpeg_reconstructed)

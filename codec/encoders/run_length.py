@@ -46,7 +46,7 @@ def encode(data):
 def decode(rle_data):
     '''
     Inverse of run_length_encode.
-    Expects an iterable of (count, value) pairs and expands them.
+    Expects an iterable of (value, count) pairs and expands them.
     '''
     out = []
     for val, count in rle_data:
@@ -54,10 +54,10 @@ def decode(rle_data):
     return out
 
 def decode_master_rle_list(rle_tuples):
-    """
+    '''
     Decodes a continuous, flattened list of RLE tuples for an entire image.
     Safely pads EOBs across multiple 64-item boundaries.
-    """
+    '''
     flat_frequencies = []
     
     for val, count in rle_tuples:
