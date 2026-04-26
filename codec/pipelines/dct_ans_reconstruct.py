@@ -18,13 +18,24 @@ def build_quantization_matrix(block_size=8):
     return q_matrix
 
 def reconstruct_from_ans(input_file='deer_ans_compressed.uofm', original_path='images/rgb16bit/deer.ppm'):
-    shape, decoded_rle = ct.load_uofm_container(input_file)
+    shape, metadata, bitstreams = ct.load_uofm_container(input_file)
     H, W, C = shape
 
-    # Don't call rle.decode() - decoded_rle is already RLE tuples
-    # print(f'Total RLE tuples decoded: {len(decoded_rle)}')
+    words = np.frombuffer(
+        bitstreams['ans_words'],
+        dtype=np.uint32,
+        count=metadata['words_length'],
+    ).copy()
+    encoded_signal = EncodedSignal(
+        np.uint64(metadata['state']),
+        words,
+        metadata['counts'],
+        metadata['values'],
+        int(metadata['length']),
+    )
+    decoded_rle = ans.decode_rle(encoded_signal)
 
-    flat_frequencies = rle.decode_master_rle_list(decoded_rle)  # Pass decoded_rle directly
+    flat_frequencies = rle.decode_master_rle_list(decoded_rle)
     # print(f'Total frequencies decoded: {len(flat_frequencies)}')
 
     total_blocks = len(flat_frequencies) // 64
@@ -43,7 +54,7 @@ def reconstruct_from_ans(input_file='deer_ans_compressed.uofm', original_path='i
     raw_floats = np.asarray(idctn(restored_frequencies, axes=(3, 4), norm='ortho'))
     raw_pixel_blocks = np.clip(np.round(raw_floats), 0, 65535).astype(np.uint16)
 
-    reconstructed_image = ct.unblock_image(raw_pixel_blocks, image_shape=shape)
+    reconstructed_image = ct.unblock_image(raw_pixel_blocks, shape)
     final_image = np.clip(reconstructed_image, 0, 65535).astype(np.uint16)
 
     original_image = ct.load_and_preprocess_image(original_path, block_size=8)
@@ -69,7 +80,7 @@ def reconstruct_from_ans(input_file='deer_ans_compressed.uofm', original_path='i
 
     # compression ratio
     original_size = H * W * C * 2  # 2 bytes per pixel in 16-bit RGB
-    compressed_size = os.path.getsize('deer_ans_compressed.uofm')
+    compressed_size = os.path.getsize(input_file)
     compression_ratio = original_size / compressed_size
     print(f"Original size: {original_size} bytes")
     print(f"Compressed size: {compressed_size} bytes")

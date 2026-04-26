@@ -2,14 +2,17 @@ import codec.tools as ct
 import numpy as np
 from skimage import io, color, util
 import codec.encoders.run_length as rle
+import codec.encoders.huffman as hf
 import codec.metrics as metrics
 
 if __name__ == '__main__':
-    # 1. Load the metadata and the RLE tuples from the custom file
-    # shape is the original image tuple, e.g., (Height, Width, Channels)
-    shape, decoded_rle_tuples = ct.load_uofm_container('deer_compressed.uofm')
+    shape, metadata, bitstreams = ct.load_uofm_container('deer_compressed.uofm')
     H, W, C = shape
-    k = 400
+    k = metadata['k']
+
+    decoded_rle_tuples = list(
+        hf.decode(bitstreams['rle_bits'], metadata['symbol_counts'])
+    )
 
     # 2. RLE DECODE
     # Expand [(1, 145), (63, 0)] back out into [145, 0, 0, 0...]

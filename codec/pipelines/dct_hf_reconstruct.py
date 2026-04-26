@@ -1,5 +1,6 @@
 import codec.tools as ct
 import codec.encoders.run_length as rle
+import codec.encoders.huffman as hf
 import numpy as np
 from scipy.fft import idctn
 import codec.metrics as metrics
@@ -18,12 +19,14 @@ def build_quantization_matrix(block_size=8):
     return q_matrix
 
 def reconstruct_from_hf(input_file='deer_compressed.uofm', original_path='images/rgb16bit/deer.ppm'):
-    # 1. Load the metadata and the RLE tuples from the custom file
-    # shape is the original image tuple, e.g., (Height, Width, Channels)
-    shape, decoded_rle_tuples = ct.load_uofm_container('deer_compressed.uofm')
+    shape, metadata, bitstreams = ct.load_uofm_container(input_file)
     H, W, C = shape
-    
-    print(f'Total RLE tuples decoded: {len(decoded_rle)}')
+
+    decoded_rle_tuples = list(
+        hf.decode(bitstreams['rle_bits'], metadata['symbol_counts'])
+    )
+
+    print(f'Total RLE tuples decoded: {len(decoded_rle_tuples)}')
 
     # 2. RLE DECODE
     # Expand [(1, 145), (63, 0)] back out into [145, 0, 0, 0...]
@@ -60,7 +63,7 @@ def reconstruct_from_hf(input_file='deer_compressed.uofm', original_path='images
     raw_pixel_blocks = np.clip(np.round(raw_floats), 0, 65535).astype(np.uint16)
 
     # 7. UNBLOCK THE IMAGE
-    reconstructed_image = ct.unblock_image(raw_pixel_blocks, image_shape=shape)
+    reconstructed_image = ct.unblock_image(raw_pixel_blocks, shape)
     final_image = np.clip(reconstructed_image, 0, 65535).astype(np.uint16)
 
     # 8. LOAD ORIGINAL IMAGE EARLY (We need it to check the scale!)

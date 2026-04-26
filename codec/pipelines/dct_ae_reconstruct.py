@@ -1,5 +1,6 @@
 import codec.tools as ct
 import codec.encoders.run_length as rle
+import codec.encoders.arithmetic as ae
 import codec.metrics as metrics
 import numpy as np
 from scipy.fft import idctn
@@ -19,8 +20,14 @@ def build_quantization_matrix(block_size=BLOCK_SIZE):
 
 
 def reconstruct_from_arithmetic(input_file=INPUT_FILE, original_path=ORIGINAL_IMAGE):
-    shape, decoded_rle_tuples = ct.load_uofm_container(input_file)
+    shape, metadata, bitstreams = ct.load_uofm_container(input_file)
     H, W, C = shape
+
+    decoded_rle_tuples = ae.decode_rle(
+        bitstreams['ae_bits'],
+        metadata['symbol_counts'],
+        metadata['total_symbols'],
+    )
 
     num_blocks_y = H // BLOCK_SIZE
     num_blocks_x = W // BLOCK_SIZE
@@ -48,7 +55,7 @@ def reconstruct_from_arithmetic(input_file=INPUT_FILE, original_path=ORIGINAL_IM
     raw_floats = np.asarray(idctn(restored_frequencies, axes=(3, 4), norm='ortho'))
     raw_pixel_blocks = np.clip(np.round(raw_floats), 0, 65535).astype(np.uint16)
 
-    reconstructed_image = ct.unblock_image(raw_pixel_blocks, image_shape=shape)
+    reconstructed_image = ct.unblock_image(raw_pixel_blocks, shape)
     final_image = np.clip(reconstructed_image, 0, 65535).astype(np.uint16)
 
     original_image = ct.load_and_preprocess_image(original_path, block_size=BLOCK_SIZE)

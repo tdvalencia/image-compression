@@ -6,9 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, color, util
 import pickle
-import codec.encoders.arithmetic as ae
-import codec.encoders.ans as ans
-from simple_ans import EncodedSignal
 
 BLOCK_SIZE = 8
 

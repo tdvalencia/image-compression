@@ -51,7 +51,8 @@ def compress_with_dct_and_arithmetic(input_path=INPUT_IMAGE, output_path=OUTPUT_
         'total_symbols': total_symbols
     }
 
-    ct.save_uofm_container(output_path, image.shape, 'arithmetic', metadata, compressed_bits)
+    bitstreams = {'ae_bits': compressed_bits}
+    ct.save_uofm_container(output_path, image.shape, metadata, bitstreams)
 
     original_size = image.size * image.dtype.itemsize
     compressed_size = os.path.getsize(output_path)
