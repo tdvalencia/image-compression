@@ -60,13 +60,14 @@ def compress_with_dct_and_ans(input_path=INPUT_IMAGE, output_path=OUTPUT_FILE):
         'counts': encoded_signal.symbol_counts,
         'values': encoded_signal.symbol_values,
         'length': encoded_signal.signal_length,
-        'words_length': len(encoded_signal.words),  # Store the exact number of uint64 values
+        'words_length': len(encoded_signal.words),  # number of uint32 code words in the stream
         'bytes_length': len(encoded_bytes)  # Store the exact byte length of the encoded data
     }
 
     # print(f"Words length: {len(encoded_signal.words)}, bytes length: {len(encoded_bytes)}")
 
-    ct.save_uofm_container(output_path, image.shape, 'ans', ans_metadata, encoded_bytes)
+    bitstreams = {'ans_words': encoded_bytes}
+    ct.save_uofm_container(output_path, image.shape, ans_metadata, bitstreams)
 
     original_size = image.size * image.dtype.itemsize
     compressed_size = os.path.getsize(output_path)

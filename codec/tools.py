@@ -6,11 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, color, util
 import pickle
-import codec.encoders.arithmetic as ae
-import codec.encoders.ans as ans
-from simple_ans import EncodedSignal
 
-def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
+BLOCK_SIZE = 8
+
+def load_and_preprocess_image(filepath: str, block_size: int = BLOCK_SIZE) -> np.ndarray:
     '''Loads an RGB image, converts to 16-bit, and crops to fit the block size.'''
     img: np.ndarray = io.imread(filepath)
 
@@ -30,7 +29,7 @@ def load_and_preprocess_image(filepath: str, block_size: int = 8) -> np.ndarray:
 
     return img[:H_cropped, :W_cropped, :]
 
-def block_image(img: np.ndarray, block_size: int = 8) -> np.ndarray:
+def block_image(img: np.ndarray, block_size: int = BLOCK_SIZE) -> np.ndarray:
     '''Breaks the RGB image into blocks'''
     H, W, C = img.shape
 
@@ -58,92 +57,45 @@ def unblock_image(blocks: np.ndarray, image_shape: tuple) -> np.ndarray:
 
     return img_cropped
 
-def save_uofm_container(filename, shape, encoder_type, encoder_metadata, compressed_data):
-    '''
-    Universal container that handles both dahuffman (bytes) and Arithmetic (bit list).
-    '''
-    # 1. If the data is already packed into bytes (like from dahuffman or ANS)
-    if isinstance(compressed_data, bytes):
-        # Pad bytes to make length divisible by 4 (for uint32)
-        remainder = len(compressed_data) % 4
-        padding = (4 - remainder) % 4  # 0 if already divisible, otherwise 1-3
-        raw_bytes = compressed_data + (b'\x00' * padding)
-    else:
-        # 2. If it's a list of bits from Arithmetic Encoding, we manually pack it
-        if isinstance(compressed_data, list):
-            compressed_data = "".join(str(b) for b in compressed_data)
+def build_quantization_matrix(block_size=8, quality_scaler=1.0):
+    q_matrix = np.zeros((block_size, block_size), dtype=np.float32)
+    for i in range(block_size):
+        for j in range(block_size):
+            # Quadratic growth: 
+            # Low frequencies stay in the 5,000s, high frequencies explode past 200,000
+            q_matrix[i, j] = 5000 + ((i + j)**2) * 8000 * quality_scaler
             
-        padding = 8 - (len(compressed_data) % 8)
-        if padding == 8: 
-            padding = 0
-            
-        padded_bit_string = compressed_data + ("0" * padding)
-        raw_bytes = bytearray(int(padded_bit_string[i:i+8], 2) for i in range(0, len(padded_bit_string), 8))
+    # Protect the DC coefficient to preserve overall block brightness
+    q_matrix[0, 0] = 2000 * quality_scaler 
+    return q_matrix
 
-    # 3. Assemble and save the payload
+def save_uofm_container(filename, shape, metadata, bitstreams):
+    '''
+    A basic container that packs the minimal required payload into bytes.
+    All encoder-specific formatting should be handled before calling this.
+    '''
     payload = {
-        'signature': 'UOFM_CONTAINER_V2',
         'shape': shape,
-        'padding': padding,
-        'encoder_type': encoder_type,
-        'encoder_metadata': encoder_metadata,
-        'data': raw_bytes
+        'metadata': metadata,
+        'bitstreams': bitstreams
     }
 
     with open(filename, 'wb') as file:
         pickle.dump(payload, file)
 
 def load_uofm_container(filename):
+    '''
+    Loads the pickled bytes and returns the structural components.
+    The calling script is responsible for unpacking the bitstreams and metadata.
+    '''
     with open(filename, 'rb') as file:
         payload = pickle.load(file)
         
     shape = payload['shape']
-    encoder_type = payload['encoder_type']
-    metadata = payload['encoder_metadata']
-    raw_bytes = payload['data']
+    metadata = payload['metadata']
+    bitstreams = payload['bitstreams']
     
-    if encoder_type == 'huffman':
-        # Parse the strings ('val_count') back into RLE tuples ((val, count))
-        from codec.encoders import huffman as hf
-        decoded_rle = hf.decode_rle(raw_bytes, metadata['symbol_counts'])
-            
-    elif encoder_type == 'arithmetic':
-        # Unpack the bytes back to bits just like you normally do for AE
-        bit_string = "".join(f"{byte:08b}" for byte in raw_bytes)
-        if payload['padding'] > 0:
-            bit_string = bit_string[:-payload['padding']]
-        bit_list = [int(b) for b in bit_string]
-        
-        symbol_counts = metadata['symbol_counts']
-        totals = metadata['total_symbols']
-        decoded_rle = ae.decode_rle(bit_list, symbol_counts, totals)
-
-    elif encoder_type == 'ans':
-        print(f"Raw bytes length from pickle: {len(raw_bytes)}")
-        print(f"Padding from payload: {payload['padding']}")
-        print(f"Bytes length from metadata: {metadata['bytes_length']}")
-        
-        # Use the exact bytes_length stored in metadata
-        bytes_length = metadata['bytes_length']
-        actual_bytes = raw_bytes[:bytes_length]
-        
-        print(f"Actual bytes length after extraction: {len(actual_bytes)}, divisible by 4: {len(actual_bytes) % 4 == 0}")
-        
-        words_length = metadata['words_length']
-        # Use uint32, not uint64!
-        words = np.frombuffer(actual_bytes, dtype=np.uint32)[:words_length]
-        
-        encoded_signal = EncodedSignal(
-            state=np.uint64(metadata['state']),
-            symbol_counts=metadata['counts'],
-            symbol_values=metadata['values'],
-            signal_length=metadata['length'],
-            words=words
-        )
-        
-        decoded_rle = ans.decode_rle(encoded_signal)
-
-    return shape, decoded_rle
+    return shape, metadata, bitstreams
 
 def plot_zoomed_comparison(original, compressed, title, zoom_size=(1000, 1500)):
     '''Plots a zoomed-in center crop of both images side-by-side.'''

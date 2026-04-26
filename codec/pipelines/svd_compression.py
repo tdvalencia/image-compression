@@ -67,11 +67,8 @@ if __name__ == '__main__':
 
     print(f"Total RLE tuples generated: {len(rle_img)}")
 
-    # entropy encode the RLE output
-    compressed_bits, symbol_counts = hf.encode_rle(rle_img)
-    saved_metadata = {
-        'symbol_counts': symbol_counts
-    }
+    compressed_bytes, symbol_counts = hf.encode(rle_img)
+    metadata = {'symbol_counts': symbol_counts, 'k': k}
+    bitstreams = {'rle_bits': compressed_bytes}
 
-    # save the compressed bits and metadata into our universal container format
-    ct.save_uofm_container('deer_compressed.uofm', image.shape, 'huffman', saved_metadata, compressed_bits)
+    ct.save_uofm_container('deer_compressed.uofm', image.shape, metadata, bitstreams)

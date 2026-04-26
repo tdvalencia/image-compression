@@ -21,7 +21,7 @@ def get_metadata_size(uofm_path):
     with open(uofm_path, 'rb') as f:
         container = pickle.load(f)
     # Measure the size of the metadata portion specifically
-    return len(pickle.dumps(container['encoder_metadata']))
+    return len(pickle.dumps(container['metadata']))
 
 def run_benchmark():
     ppm_files = glob.glob(os.path.join(IMAGE_DIR, "*.ppm"))

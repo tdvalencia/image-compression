@@ -5,27 +5,28 @@
 from dahuffman import HuffmanCodec
 from collections import Counter
 
-def encode_rle(rle_data):
+def encode(data):
     '''
-    Takes raw RLE data (a list of tuples) and compresses it directly!
+    Takes raw RLE data (a list of tuples) and compresses it directly
+    rle_data is a list of (value, count) pairs, so we need to treat each pair as a unique symbol.
     '''
     # collect a dictionary of symbol frequencies to build Huffman tree
-    symbol_counts = Counter(rle_data)
+    symbol_counts = Counter(data)
     
     # "train" the codec and compress the data
     codec = HuffmanCodec.from_frequencies(symbol_counts)    
-    compressed_bytes = codec.encode(rle_data)
+    compressed_bytes = codec.encode(data)
     
     return compressed_bytes, symbol_counts
 
-def decode_rle(compressed_bytes, symbol_counts):
+def decode(compressed_bytes, symbol_counts):
     '''
     Decodes the bytes directly back into a list of tuples.
     '''
     codec = HuffmanCodec.from_frequencies(symbol_counts)
-    rle_data = codec.decode(compressed_bytes)
+    data = codec.decode(compressed_bytes)
     
-    return rle_data
+    return data
 
 if __name__ == '__main__':
     # 1. Create a fake block of RLE data (List of tuples)
@@ -38,12 +39,16 @@ if __name__ == '__main__':
         (0, 47)     # The trailing zeros completing the 64-item block
     ]
 
+    mock_data = [1, 2, 3, 3, 3, 4, 4, 4, 4, 5]
+
+    input_data = mock_rle_data  # You can switch this to fake_data to test with a different dataset
+
     print("--- 1. ORIGINAL DATA ---")
-    print(mock_rle_data)
-    print(f"Original Length: {len(mock_rle_data)} tuples\n")
+    print(input_data)
+    print(f"Original Length: {len(input_data)} items\n")
 
     # 2. Run the Encoder
-    compressed_bytes, saved_counts = encode_rle(mock_rle_data)
+    compressed_bytes, saved_counts = encode(input_data)
 
     print("--- 2. COMPRESSION STATS ---")
     print(f"Raw Bytes Output: {compressed_bytes}")
@@ -51,14 +56,14 @@ if __name__ == '__main__':
     print(f"Huffman Dictionary Saved: {saved_counts}\n")
 
     # 3. Run the Decoder
-    reconstructed_data = decode_rle(compressed_bytes, saved_counts)
+    reconstructed_data = decode(compressed_bytes, saved_counts)
 
     print("--- 3. RECONSTRUCTED DATA ---")
     print(reconstructed_data)
 
     # 4. The Ultimate Proof
     print("\n--- THE VERDICT ---")
-    if mock_rle_data == reconstructed_data:
+    if input_data == reconstructed_data:
         print("✅ SUCCESS! The data survived the round trip perfectly.")
     else:
         print("❌ FAILED! The data was corrupted.")

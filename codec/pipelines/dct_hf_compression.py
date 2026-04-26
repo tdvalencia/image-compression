@@ -48,14 +48,11 @@ def compress_with_dct_and_hf(input_path='images/rgb16bit/deer.ppm', output_path=
 
     print(f"Total RLE tuples generated: {len(rle_blocks)}")
 
-    # entropy encode the RLE output
-    compressed_bits, symbol_counts = hf.encode_rle(rle_blocks)
-    saved_metadata = {
-        'symbol_counts': symbol_counts
-    }
+    compressed_bytes, symbol_counts = hf.encode(rle_blocks)
+    metadata = {'symbol_counts': symbol_counts}
+    bitstreams = {'rle_bits': compressed_bytes}
 
-    # save the compressed bits and metadata into our universal container format
-    ct.save_uofm_container(output_path, image.shape, 'huffman', saved_metadata, compressed_bits)
+    ct.save_uofm_container(output_path, image.shape, metadata, bitstreams)
 
 # Calculate compression stats
     original_size = image.size * image.dtype.itemsize
