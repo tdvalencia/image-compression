@@ -1,319 +1,131 @@
-<html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- styles: same design tokens & components as before, now in css/site.css for all pages -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Compression Project</title>
-    <style>
-        /* --- EASY MODIFY: Color Palette & Fonts --- */
-        :root {
-            --primary-color: #4f46e5;      
-            --primary-hover: #4338ca;
-            --bg-color: #f9fafb;           
-            --surface-color: #ffffff;      
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        /* --- BASE STYLES --- */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            scroll-behavior: smooth; 
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        /* --- NAVIGATION --- */
-        nav {
-            background-color: var(--surface-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 500;
-            transition: color 0.2s;
-            text-transform: lowercase; /* Forces lowercase */
-        }
-
-        .nav-links a:hover {
-            color: var(--primary-color);
-        }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            padding: 6rem 0 4rem 0;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            letter-spacing: -0.025em;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 2rem auto;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* --- CONTENT SECTIONS --- */
-        .content-section {
-            padding: 4rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .content-section:last-of-type {
-            border-bottom: none;
-        }
-
-        .content-section h2 {
-            font-size: 2.25rem;
-            letter-spacing: -0.025em;
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-            padding-bottom: 0.75rem; 
-        }
-
-        .content-section h3 {
-            font-size: 1.25rem;
-            margin: 1.5rem 0 0.5rem 0;
-        }
-
-        .content-section p {
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            max-width: 800px;
-        }
-
-        /* --- PLOT GRID --- */
-        .plot-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .plot-card {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-
-        .plot-image-placeholder {
-            width: 100%;
-            height: 250px;
-            background-color: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            font-style: italic;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .plot-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover; /* This crops the image nicely to fit the box without distorting it */
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .plot-details {
-            padding: 1.5rem;
-        }
-
-        /* --- TIMELINE --- */
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .task {
-            background-color: var(--surface-color);
-            padding: 1rem 1.5rem;
-            border-left: 4px solid var(--primary-color);
-            border-radius: 0 0.5rem 0.5rem 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            max-width: 800px;
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border-color);
-            margin-top: 2rem;
-        }
-    </style>
+    <title>home</title>
+    <link rel="stylesheet" href="css/site.css">
 </head>
-<body>
+<body class="site-shell">
 
     <nav>
         <div class="container nav-content">
-            <div class="logo">Image compression</div>
+            <div class="logo"><a href="index.html">image compression</a></div>
             <div class="nav-links">
-                <a href="#progress">Progress</a>
-                <a href="#data">Data plots</a>
-                <a href="#plan">Plan</a>
-                <a href="#learned">Learnings</a>
-                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color);">github</a>
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
             </div>
         </div>
     </nav>
 
-    <header class="hero container">
-        <h1>smaller without sacrificing quality.</h1>
-        <p>This project aims to make a custom image compression codec that is on par with modern codecs.</p>
+    <!-- full-bleed splash: swap --hero-splash-image to any wide photo (e.g. a starfield) -->
+    <header class="hero hero--splash" style="--hero-splash-image: url('assets/deer-original.png');" role="banner">
+        <div class="hero-splash__inner">
+            <h1>smaller without sacrificing quality</h1>
+        </div>
     </header>
 
-    <main class="container">
-        
-        <section id="progress" class="content-section">
-            <h2>Project progress &amp; Challenges</h2>
-            <h3>Direction and Dataset</h3>
-            <p>
-                We are specifically looking at making a lossy image compression algorithm because there are more techniques to employ as we try to compress our image smaller. We chose images because they are visual and would look nice on a portfolio website without the additional overhead of adding sound players. We may branch out to video compression if we have the time.
-            </p>
-            <p>
-                For our dataset, we looked at the <a href="https://imagecompression.info">imagecompression.info</a> website; their test images may be a good starting point for getting our algorithm up and running. We also found an additional github repository with more lossless images from a Kodak camera that can be worked on if needed.
-            </p>
-            <h3>Compression Techniques Explored</h3>
-            <p>
-                Through research, we found the Discrete Cosine Transform (DCT) and Singular Value Decomposition (SVD) as two potential techniques we can employ. The DCT uses only real numbers and removes visually insignificant high frequency information. Alternatively, SVD breaks the image into essential components by denoising and keeping only the most significant signal value, allowing for the removal of redundant data.
-            </p>
-            <h3>Challenges &amp; Hurdles</h3>
-            <p>
-                <strong>Challenge:</strong> When initially extracting the 8x8 blocks to process the image, we tried using standard nested <code>for</code> loops. This was incredibly slow and caused a massive computational bottleneck in MATLAB when dealing with higher resolution images.
-            </p>
-            <p>
-                <strong>Solution:</strong> To overcome this hurdle, we are exploring MATLAB's built-in block-processing functions and vectorization techniques to perform the mathematical transforms across the entire matrix simultaneously rather than pixel-by-pixel.
-            </p>
-        </section>
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="is-active">home</a>
+                <a href="background.html">background</a>
+                <a href="progress.html">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html">dpcm</a>
+                <a href="entropy.html">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
 
-        <section id="data" class="content-section">
-            <h2>Data Visualizations</h2>
-            <p>Below are plots demonstrating the core aspects of our signal processing pipeline.</p>
-            
-            <div class="plot-grid">
-                <div class="plot-card">
-                    <img src="assets/deer-original.png" alt="Original Image of a Deer" class="plot-image">
-                    <div class="plot-details">
-                        <h3>1. Original Image (Spatial Domain)</h3>
-                        <p>This plot displays our baseline test image in grayscale. We loaded this dataset into MATLAB to serve as the visual reference point before applying our mathematical transforms.</p>
-                    </div>
-                </div>
+        <div class="main-column">
+            <main>
+                <section class="surface-card">
+                    <!-- <p class="lead">
+                        Start with <strong>background</strong> for motivation, then <strong>progress</strong> for the full course-style report (figures, schedule, MATLAB learnings). Technique tabs break out DCT, SVD/PCA, entropy, quantization, and DPCM; <strong>reflection</strong> is for end-of-term takeaways. Layout inspiration: <a href="https://sites.google.com/umich.edu/eecs351-jwst-diffraction/home">EECS&nbsp;351 JWST team site</a>.
+                    </p>
+                    <p style="color: var(--text-muted); max-width: 720px;">
+                        We focus on <strong style="color: var(--text-main);">lossy</strong> still-image compression: PSNR, SSIM, compression ratio, and side-by-side visuals.
+                    </p>
+                    <h3>
+                        What this project is about
+                    </h3> -->
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">
+                        Image compression is the process of reducing the size of an image to save storage space or bandwidth.
+                        Almost every image compression algorithm takes advantage of the human eye's limited ability and an image's 
+                        statistical properties to reduce the amount of data needed to represent an image. In real life, that looks like
+                        compressing a 1080p video to 720p or 480p to save bandwidth when streaming videos or compressing a
+                        library of images to save storage space on your phone.
+                    </p>
+                    <figure class="figure-simple">
+                        <img src="assets/lossy_524.png" alt="Illustration of lossy JPEG compression at high zoom.">
+                        <figcaption>Figure 1: JPEG compression of PNG image. Source: <a href="https://techterms.com/definition/lossy">TechTerms: Lossy</a>.</figcaption>
+                    </figure>
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">
+                        This project aims to build a <strong>JPEG-esq lossy</strong> image compression codec. 
+                        We wanted to learn about image compression through our own implementation
+                        of image compression techniques. We used techniques such as the Discrete Cosine Transform (DCT) 
+                        and Singular Value Decomposition (SVD) to create an 16-bit (high dynamic range) image compression 
+                        codec that is close to the performance of the JPEG codec.
+                    </p>
+                </section>
 
-                <div class="plot-card">
-                    <img src="assets/deer-8x8-block-coeffs.png" alt="2D DCT of Deer Image" class="plot-image">
-                    <div class="plot-details">
-                        <h3>2. 2D DCT of 8x8 Blocks (Frequency Domain)</h3>
-                        <p>This plot shows our image processed through a 2D DCT in 8x8 blocks. We generated this by applying the transform to shift the spatial data into frequencies. The 2D DCT highlighted central parts where there was more homogenous coloring. The darker edges of the blocks indicate areas where there were sharper edges.</p>
-                    </div>
-                </div>
-
-                <div class="plot-card">
-                    <img src="assets/deer-1-coeffs.png" alt="One Coefficient Kept" class="plot-image">
-                    <div class="plot-details">
-                        <h3>3. Keeping One DCT Coefficient</h3>
-                        <p>This plot displays the DCT compression when we keep one coefficient. If you look closely, the compressed image contains less detail than the original. The original image has a file size of 1165.97 KB while the compressed image has a file size of 171.12 KB. The compressed image is about 15% the size of the original image with only a minor decrease in quality. </p>
-                </div>
-            </div>
-        </div></section>
-
-        <section id="plan" class="content-section">
-            <h2>Next steps (3-week plan)</h2>
-            <p>Our plan for finalizing the algorithm and evaluating its performance:</p>
-            
-            <div class="timeline">
-                <div class="task">
-                    <strong>Week 1:</strong> Finalize the core compression engine by fully implementing a hybrid Discrete Cosine Transform and Singular Value Decomposition algorithm.
-                </div>
-                <div class="task">
-                    <strong>Week 2:</strong> Evaluate visual fidelity. We will use PSNR (peak signal to noise) and SSIM (structural similarity index measure) to make sure our compressed image is maintaining visual fidelity.
-                </div>
-                <div class="task">
-                    <strong>Week 3:</strong> Benchmark file size reductions. We will look at the compression ratio and bits per pixel to see how small we were able to make our compressed image.
-                </div>
-            </div>
-        </section>
-
-        <section id="learned" class="content-section">
-            <h2>What we learned</h2>
-            <h3>MATLAB's <code>dctmtx()</code> and <code>blockproc()</code></h3>
-            <p>
-                While working with our image data, we learned how to utilize MATLAB's <code>dctmtx()</code> command to compute the 2-dimensional Discrete Cosine Transform, as well as exploring <code>blockproc()</code> to apply functions efficiently.
-            </p>
-            <p>
-                <strong>Why it's relevant:</strong> Using <code>dctmtx()</code> allowed us to easily shift our image data into the frequency domain. Seeing the output of this command directly verified our research: lower frequencies carry most of the image's energy. Because the human eye is not the best at identifying high frequencies, this MATLAB output proved that our core strategy—removing high-frequency components to save data—will successfully compress the image without ruining the visual energy. Furthermore, tools like <code>blockproc()</code> are essential for applying these transforms efficiently without slowing down our script.
-            </p>
-        </section>
-
-    </main>
+                <!-- <div class="teaser-grid">
+                    <a class="teaser-card" href="background.html">
+                        <h3>Background</h3>
+                        <p>Motivation, problem framing, and how the project fits EECS&nbsp;351.</p>
+                        <span class="more">open background →</span>
+                    </a>
+                    <a class="teaser-card" href="progress.html">
+                        <h3>Progress report</h3>
+                        <p>Direction, dataset, hurdles, DCT figures, 3-week plan, and what we learned.</p>
+                        <span class="more">open progress →</span>
+                    </a>
+                    <a class="teaser-card" href="svd-pca.html">
+                        <h3>SVD / PCA</h3>
+                        <p>Low-rank SVD view and PCA color prefilter before blocking.</p>
+                        <span class="more">open svd / pca →</span>
+                    </a>
+                    <a class="teaser-card" href="dct.html">
+                        <h3>DCT</h3>
+                        <p>8×8 orthonormal DCT, zig-zag, DC/AC split, and figure gallery.</p>
+                        <span class="more">open dct →</span>
+                    </a>
+                    <a class="teaser-card" href="quantization.html">
+                        <h3>Quantization</h3>
+                        <p>Frequency-shaped matrices and PCA-aware per-channel scaling.</p>
+                        <span class="more">open quantization →</span>
+                    </a>
+                    <a class="teaser-card" href="dpcm.html">
+                        <h3>DPCM</h3>
+                        <p>Differential coding on the DC coefficient chain.</p>
+                        <span class="more">open dpcm →</span>
+                    </a>
+                    <a class="teaser-card" href="entropy.html">
+                        <h3>Entropy encoders</h3>
+                        <p>Huffman streams, ANS, and arithmetic experiments on RLE symbols.</p>
+                        <span class="more">open entropy →</span>
+                    </a>
+                    <a class="teaser-card" href="reflection.html">
+                        <h3>Reflection</h3>
+                        <p>End-of-term takeaways, tradeoffs, and what we would do next.</p>
+                        <span class="more">open reflection →</span>
+                    </a>
+                </div> -->
+            </main>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression. all rights reserved.</p>
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
         </div>
     </footer>
 
-
-</body></html>
+</body>
+</html>
