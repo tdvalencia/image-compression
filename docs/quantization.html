@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>quantization</title>
     <link rel="stylesheet" href="css/site.css">
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['\\(', '\\)'], ['$', '$']],
-                displayMath: [['\\[', '\\]'], ['$$', '$$']],
-            },
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body class="site-shell">
 
@@ -38,7 +29,7 @@
                 <a href="quantization.html" class="is-active">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
-                <a href="results.html">results</a>
+                <a href="reflection.html">reflection</a>
                 <a href="references.html">references</a>
                 <a href="team.html">team</a>
             </nav>
@@ -52,47 +43,32 @@
 
             <main>
                 <section class="content-section">
-                    <h2>Goal</h2>
+                    <h2>Frequency-weighted step sizes</h2>
                     <p>
-                        Turn continuous-valued transform coefficients into <strong>small integers</strong> so entropy coding can work well. Quantization is the main lossy step:
-                        it controls the rate–distortion tradeoff by forcing high-frequency coefficients toward zero.
-                    </p>
-                </section>
-
-                <section class="content-section">
-                    <h2>Math</h2>
-                    <p>
-                        We use an 8×8 <strong>quantization matrix</strong> \(Q\) whose entries increase with spatial frequency. Quantization is:
-                        \( \hat{C}_{i,j} = \text{round}(C_{i,j} / Q_{i,j}) \), and dequantization is \( \tilde{C}_{i,j} = \hat{C}_{i,j} \cdot Q_{i,j} \).
-                    </p>
-                    <p>
-                        In the hybrid pipeline we apply different effective step sizes per PCA component: the first component uses the base matrix, and the second and third components use a scaled matrix (e.g. \(6\times\)) so those channels are quantized more coarsely.
-                    </p>
-                </section>
-
-                <section class="content-section">
-                    <h2>Code</h2>
-                    <p>
-                        The base matrix is built by <code>build_quantization_matrix</code> in <code>codec/tools.py</code>.
-                        In <code>codec/pipelines/hybrid_hf_compression.py</code> we divide DCT blocks by that matrix and round to <code>int32</code>, using heavier scaling for PCA channels 2 and 3.
-                    </p>
-                    <p>
-                        The decoder rebuilds the same matrix and multiplies to dequantize before inverse DCT, so encoder and decoder stay matched aside from rounding loss.
+                        We build an 8×8 <strong>quantization matrix</strong> that grows with spatial frequency (higher indices get larger step sizes). The DC bin is guarded with a smaller step to preserve overall block brightness. In code this lives in <code>build_quantization_matrix</code> in <code>codec/tools.py</code>.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: heatmap of your quantization matrix, or a before/after coefficient histogram).</p>
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: heatmap of your quantization matrix).</p>
                         </div>
-                        <figcaption>Figure (optional): quantization matrix or coefficient sparsity after quantization.</figcaption>
+                        <figcaption>Figure (optional): quantization matrix visualization.</figcaption>
                     </figure>
                 </section>
 
                 <section class="content-section">
-                    <h2>Hand-off</h2>
+                    <h2>PCA-aware scaling (hybrid pipeline)</h2>
                     <p>
-                        Output is an integer-valued block tensor. Next we serialize each block in zig-zag order, split DC and AC streams, run <a href="dpcm.html">DPCM</a> on the DC stream,
-                        and entropy encode both streams (see <a href="entropy.html">entropy encoders</a>).
+                        After PCA, the first eigen-channel carries most perceptual energy (similar to luminance). We apply the <strong>base</strong> matrix there. The second and third channels get the same matrix multiplied by a larger factor (e.g. <strong>6×</strong>) so chroma-like components are quantized more coarsely. JPEG’s separate luma and chroma tables follow the same idea, but here the “channels” are PC axes instead of YCbCr.
                     </p>
+                    <p>
+                        Quantized coefficients are rounded to integers; dequantization multiplies by the same matrix (and channel scale) on decode so the encoder and decoder stay matched bit-for-bit aside from loss from rounding.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: per-channel scaling diagram).</p>
+                        </div>
+                        <figcaption>Figure (optional): PCA-aware scaling across eigen-channels.</figcaption>
+                    </figure>
                 </section>
             </main>
         </div>
