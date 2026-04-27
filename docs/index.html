@@ -211,6 +211,7 @@
         <div class="container nav-content">
             <div class="logo">Image compression</div>
             <div class="nav-links">
+                <a href="#overview">Overview</a>
                 <a href="#progress">Progress</a>
                 <a href="#data">Data plots</a>
                 <a href="#plan">Plan</a>
@@ -226,7 +227,25 @@
     </header>
 
     <main class="container">
-        
+     <section id="overview" class="content-section">
+    <h2>Project Overview</h2>
+
+    <p>
+        Digital images require significant storage space and network bandwidth, making efficient compression essential for modern applications such as websites, mobile devices, streaming platforms, and cloud storage. The goal of this project was to design and evaluate a custom image compression codec capable of reducing file size while preserving perceptual image quality.
+    </p>
+
+    <p>
+        Our approach focused on lossy compression, where visually insignificant information can be removed to achieve stronger compression ratios than traditional lossless methods. We explored multiple techniques including the Discrete Cosine Transform (DCT), Singular Value Decomposition (SVD), quantization, and entropy coding methods such as Huffman and ANS coding.
+    </p>
+
+    <p>
+        By combining classical DSP tools with modern coding strategies, we created and benchmarked several compression pipelines against existing standards such as JPEG. Performance was evaluated using compression ratio, bits per pixel, PSNR, SSIM, runtime, and visual reconstruction quality.
+    </p>
+
+    <p>
+        This project demonstrates how signal processing principles remain highly relevant in modern multimedia systems and how hybrid methods can produce efficient compression without major sacrifices in image fidelity.
+    </p>
+</section>   
         <section id="progress" class="content-section">
             <h2>Project progress &amp; Challenges</h2>
             <h3>Direction and Dataset</h3>
