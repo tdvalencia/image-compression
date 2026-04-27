@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>entropy encodings</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="site-shell">
+
+    <nav>
+        <div class="container nav-content">
+            <div class="logo"><a href="index.html">Image compression</a></div>
+            <div class="nav-links">
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html">home</a>
+                <a href="background.html">background</a>
+                <a href="progress.html">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html">dpcm</a>
+                <a href="entropy.html" class="is-active">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
+
+        <div class="main-column">
+            <header class="hero hero--compact">
+                <h1>Entropy encoders</h1>
+                <p>Turning quantized symbols and run-length tuples into compact bitstreams.</p>
+            </header>
+
+            <main>
+                <section class="content-section">
+                    <h2>Huffman (canonical backend)</h2>
+                    <p>
+                        Our Huffman path builds a frequency table over the <em>exact</em> symbols we will encode (DPCM deltas for DC, RLE tuples for AC), trains a codec from those counts, and writes raw compressed bytes. The hybrid pipeline stores <strong>separate</strong> DC and AC streams plus their symbol count tables in the file container so the decoder can reconstruct both Huffman trees.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: DC vs AC stream diagram or histogram).</p>
+                        </div>
+                        <figcaption>Figure (optional): Huffman / dual-stream layout.</figcaption>
+                    </figure>
+                </section>
+
+                <section class="content-section">
+                    <h2>ANS &amp; arithmetic variants</h2>
+                    <p>
+                        Additional pipelines experiment with <strong>asymmetric numeral systems (ANS)</strong> and <strong>static arithmetic coding</strong> on the same RLE tuple vocabulary. ANS flattens tuples to a symbol stream and packs state plus code words into a custom blob; arithmetic coding maps stringified <code>value_count</code> symbols through a scaled static model.
+                    </p>
+                    <p>
+                        Encoder-specific packing lives in the pipeline scripts; the on-disk container only holds <code>metadata</code> and named <code>bitstreams</code> blobs so each backend stays swappable.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: ANS state diagram or rate comparison plot).</p>
+                        </div>
+                        <figcaption>Figure (optional): ANS or arithmetic coding experiment.</figcaption>
+                    </figure>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+        </div>
+    </footer>
+
+</body>
+</html>

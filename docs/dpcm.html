@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dpcm</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="site-shell">
+
+    <nav>
+        <div class="container nav-content">
+            <div class="logo"><a href="index.html">Image compression</a></div>
+            <div class="nav-links">
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html">home</a>
+                <a href="background.html">background</a>
+                <a href="progress.html">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html" class="is-active">dpcm</a>
+                <a href="entropy.html">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
+
+        <div class="main-column">
+            <header class="hero hero--compact">
+                <h1>DPCM on DC coefficients</h1>
+                <p>Differential pulse-code modulation reduces redundancy in the DC sequence before Huffman coding.</p>
+            </header>
+
+            <main>
+                <section class="content-section">
+                    <h2>Why only the DCs?</h2>
+                    <p>
+                        Each 8×8 block has one DC DCT coefficient that tracks coarse brightness. Neighboring blocks in natural images tend to have <strong>similar DC values</strong>, so the raw DC sequence is spatially smooth. The AC coefficients are already sparse and zig-zag friendly for RLE; the DC path benefits more from <strong>prediction</strong>.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: DC sequence before/after DPCM).</p>
+                        </div>
+                        <figcaption>Figure (optional): DC correlation along raster order.</figcaption>
+                    </figure>
+                </section>
+
+                <section class="content-section">
+                    <h2>What we compute</h2>
+                    <p>
+                        After zig-zag flattening we peel off the first sample of every block as the DC stream. <strong>DPCM</strong> replaces that stream with first-order differences (each sample minus its predecessor). The first block’s DC is kept as an anchor; the rest of the chain is deltas. Huffman then encodes the <em>deltas</em>, which have a tighter, more compressible histogram than raw DCs.
+                    </p>
+                    <p>
+                        On decode we invert DPCM to recover the DC sequence, merge DCs back with decoded AC zig-zag data, and continue with inverse quantization and IDCT. Implementation: <code>codec/encoders/dpcm.py</code>, wired in <code>hybrid_hf_compression.py</code>.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: delta histogram vs raw DC histogram).</p>
+                        </div>
+                        <figcaption>Figure (optional): DPCM on DC coefficients.</figcaption>
+                    </figure>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>progress report</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="site-shell">
+
+    <nav>
+        <div class="container nav-content">
+            <div class="logo"><a href="index.html">Image compression</a></div>
+            <div class="nav-links">
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html">home</a>
+                <a href="background.html">background</a>
+                <a href="progress.html" class="is-active">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html">dpcm</a>
+                <a href="entropy.html">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
+
+        <div class="main-column">
+            <header class="hero hero--compact">
+                <h1>Progress report</h1>
+                <p>Our submitted progress report.</p>
+            </header>
+
+            <main>
+                <section id="direction" class="content-section">
+                    <h2>Project progress &amp; challenges</h2>
+                    <h3>Direction and dataset</h3>
+                    <p>
+                        We are specifically looking at making a <strong>lossy</strong> image compression algorithm because there are more techniques to employ as we try to compress our image smaller. We chose images because they are visual and would look nice on a portfolio website without the additional overhead of adding sound players. We may branch out to video compression if we have the time.
+                    </p>
+                    <p>
+                        For our dataset, we looked at the <a href="https://imagecompression.info">imagecompression.info</a> website; their test images may be a good starting point for getting our algorithm up and running. We also found an additional GitHub repository with more lossless images from a Kodak camera that can be worked on if needed.
+                    </p>
+                    <h3>Compression techniques explored</h3>
+                    <p>
+                        Through research, we found the Discrete Cosine Transform (DCT) and Singular Value Decomposition (SVD) as two potential techniques we can employ. The DCT uses only real numbers and removes visually insignificant high frequency information. Alternatively, SVD breaks the image into essential components by denoising and keeping only the most significant signal value, allowing for the removal of redundant data.
+                    </p>
+                    <h3>Challenges &amp; hurdles</h3>
+                    <p>
+                        <strong>Challenge:</strong> When initially extracting the 8x8 blocks to process the image, we tried using standard nested <code>for</code> loops. This was incredibly slow and caused a massive computational bottleneck in MATLAB when dealing with higher resolution images.
+                    </p>
+                    <p>
+                        <strong>Solution:</strong> To overcome this hurdle, we are exploring MATLAB's built-in block-processing functions and vectorization techniques to perform the mathematical transforms across the entire matrix simultaneously rather than pixel-by-pixel.
+                    </p>
+                </section>
+
+                <section id="figures" class="content-section">
+                    <h2>Data visualizations</h2>
+                    <p>Plots demonstrating the core aspects of our early DCT pipeline (MATLAB / prototype stage).</p>
+
+                    <div class="plot-grid">
+                        <div class="plot-card">
+                            <img src="assets/deer-original.png" alt="Original Image of a Deer" class="plot-image">
+                            <div class="plot-details">
+                                <h3>1. Original image (spatial domain)</h3>
+                                <p>This plot displays our baseline test image in grayscale. We loaded this dataset into MATLAB to serve as the visual reference point before applying our mathematical transforms.</p>
+                            </div>
+                        </div>
+
+                        <div class="plot-card">
+                            <img src="assets/deer-8x8-block-coeffs.png" alt="2D DCT of Deer Image" class="plot-image">
+                            <div class="plot-details">
+                                <h3>2. 2D DCT of 8×8 blocks (frequency domain)</h3>
+                                <p>This plot shows our image processed through a 2D DCT in 8×8 blocks. We generated this by applying the transform to shift the spatial data into frequencies. The 2D DCT highlighted central parts where there was more homogenous coloring. The darker edges of the blocks indicate areas where there were sharper edges.</p>
+                            </div>
+                        </div>
+
+                        <div class="plot-card">
+                            <img src="assets/deer-1-coeffs.png" alt="One Coefficient Kept" class="plot-image">
+                            <div class="plot-details">
+                                <h3>3. Keeping one DCT coefficient</h3>
+                                <p>This plot displays the DCT compression when we keep one coefficient. If you look closely, the compressed image contains less detail than the original. The original image has a file size of 1165.97 KB while the compressed image has a file size of 171.12 KB. The compressed image is about 15% the size of the original image with only a minor decrease in quality.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="plan" class="content-section">
+                    <h2>Next steps (3-week plan)</h2>
+                    <p>Our plan for finalizing the algorithm and evaluating its performance:</p>
+                    <div class="timeline">
+                        <div class="task">
+                            <strong>Week 1:</strong> Finalize the core compression engine by fully implementing a hybrid Discrete Cosine Transform and Singular Value Decomposition algorithm.
+                        </div>
+                        <div class="task">
+                            <strong>Week 2:</strong> Evaluate visual fidelity. We will use PSNR (peak signal to noise) and SSIM (structural similarity index measure) to make sure our compressed image is maintaining visual fidelity.
+                        </div>
+                        <div class="task">
+                            <strong>Week 3:</strong> Benchmark file size reductions. We will look at the compression ratio and bits per pixel to see how small we were able to make our compressed image.
+                        </div>
+                    </div>
+                </section>
+
+                <section id="learnings" class="content-section">
+                    <h2>What we learned</h2>
+                    <h3>MATLAB’s <code>dctmtx()</code> and <code>blockproc()</code></h3>
+                    <p>
+                        While working with our image data, we learned how to utilize MATLAB’s <code>dctmtx()</code> command to compute the 2-dimensional Discrete Cosine Transform, as well as exploring <code>blockproc()</code> to apply functions efficiently.
+                    </p>
+                    <p>
+                        <strong>Why it’s relevant:</strong> Using <code>dctmtx()</code> allowed us to easily shift our image data into the frequency domain. Seeing the output of this command directly verified our research: lower frequencies carry most of the image’s energy. Because the human eye is not the best at identifying high frequencies, this MATLAB output proved that our core strategy (removing high-frequency components to save data) will successfully compress the image without ruining the visual energy. Furthermore, tools like <code>blockproc()</code> are essential for applying these transforms efficiently without slowing down our script.
+                    </p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+        </div>
+    </footer>
+
+</body>
+</html>

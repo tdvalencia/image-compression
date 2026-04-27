@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dct</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="site-shell">
+
+    <nav>
+        <div class="container nav-content">
+            <div class="logo"><a href="index.html">Image compression</a></div>
+            <div class="nav-links">
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html">home</a>
+                <a href="background.html">background</a>
+                <a href="progress.html">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html" class="is-active">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html">dpcm</a>
+                <a href="entropy.html">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
+
+        <div class="main-column">
+            <header class="hero hero--compact">
+                <h1>Discrete cosine transform (DCT)</h1>
+                <p>Block-wise frequency decorrelation before quantization, the same building block as baseline JPEG.</p>
+            </header>
+
+            <main>
+                <section class="content-section">
+                    <h2>What we use it for</h2>
+                    <p>
+                        After optional color transforms (see <a href="svd-pca.html">svd / pca</a>), we reshape the image into non-overlapping <strong>8×8</strong> blocks per channel. A <strong>type-II DCT with orthonormal normalization</strong> is applied in 2D on each block so energy concentrates in a few low-frequency coefficients. That concentration is what makes aggressive quantization and run-length coding worthwhile.
+                    </p>
+                    <p>
+                        In code, the hybrid pipeline applies <code>dctn</code> on the blocked tensor (spatial axes of each block). The inverse path uses the matching <code>idctn</code> with the same normalization so round-trip is consistent.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: 8×8 basis tiles or pipeline snippet).</p>
+                        </div>
+                        <figcaption>Figure (optional): DCT block or basis illustration.</figcaption>
+                    </figure>
+                </section>
+
+                <section class="content-section">
+                    <h2>Zig-zag &amp; DC / AC split</h2>
+                    <p>
+                        For entropy coding we reorder each quantized block into a zig-zag scan: the <strong>DC</strong> term (average intensity of the block) is handled separately from <strong>AC</strong> coefficients. AC values are run-length encoded on zeros; the DC sequence is highly correlated block-to-block, so we run <a href="dpcm.html">DPCM</a> on the DCs before entropy coding.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Figures</h2>
+                    <p>Same DCT-focused figures that appear in the <a href="progress.html#figures">progress report</a>, shown here for the technique page.</p>
+                    <div class="plot-grid">
+                        <div class="plot-card">
+                            <img src="assets/deer-original.png" alt="Original deer test image" class="plot-image">
+                            <div class="plot-details">
+                                <h3>Spatial domain</h3>
+                                <p>Baseline before DCT.</p>
+                            </div>
+                        </div>
+                        <div class="plot-card">
+                            <img src="assets/deer-8x8-block-coeffs.png" alt="DCT blocks visualization" class="plot-image">
+                            <div class="plot-details">
+                                <h3>8×8 DCT blocks</h3>
+                                <p>Frequency-domain view per block.</p>
+                            </div>
+                        </div>
+                        <div class="plot-card">
+                            <img src="assets/deer-1-coeffs.png" alt="Single coefficient reconstruction" class="plot-image">
+                            <div class="plot-details">
+                                <h3>Severe truncation</h3>
+                                <p>Keeping only one coefficient illustrates how much energy lives in the DC and lowest AC terms.</p>
+                            </div>
+                        </div>
+                        <div class="plot-card">
+                            <img src="assets/deer-3-coeffs.png" alt="Three coefficients reconstruction" class="plot-image">
+                            <div class="plot-details">
+                                <h3>Three coefficients</h3>
+                                <p>Stepping up retention slightly restores more edge structure for a modest bit cost.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+        </div>
+    </footer>
+
+</body>
+</html>

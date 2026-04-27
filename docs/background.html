@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background | Image Compression | EECS 351</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body class="site-shell">
+
+    <nav>
+        <div class="container nav-content">
+            <div class="logo"><a href="index.html">Image compression</a></div>
+            <div class="nav-links">
+                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="site-layout">
+        <aside class="sidebar" aria-label="Site">
+            <div class="sidebar-title">in this site</div>
+            <nav class="sidebar-nav">
+                <a href="index.html">home</a>
+                <a href="background.html" class="is-active">background</a>
+                <a href="progress.html">progress</a>
+                <a href="svd-pca.html">svd / pca</a>
+                <a href="dct.html">dct</a>
+                <a href="quantization.html">quantization</a>
+                <a href="dpcm.html">dpcm</a>
+                <a href="entropy.html">entropy encoders</a>
+                <a href="reflection.html">reflection</a>
+                <a href="references.html">references</a>
+                <a href="team.html">team</a>
+            </nav>
+        </aside>
+
+        <div class="main-column">
+            <header class="hero hero--compact">
+                <h1>Background</h1>
+                <p>Our test data, how baseline JPEG is structured, and how the <code>hybrid_hf_compression</code> pipeline maps onto those ideas.</p>
+            </header>
+
+            <main>
+                <section class="content-section">
+                    <h2>Test data: 16-bit images from imagecompression.info</h2>
+                    <p>
+                        We standardize on <strong>16-bit per channel</strong> RGB stills from the public corpus hosted at <a href="https://imagecompression.info">https://imagecompression.info</a>. That site bundles widely used evaluation images for compression research; working in 16-bit gives more dynamic range than 8-bit JPEGs typically target, so quantization and rounding errors show up more gently in the highlights and shadows while we prototype.
+                    </p>
+                    <p>
+                        Before coding, each image is loaded as unsigned 16-bit RGB, optionally converted to three channels if needed, and <strong>cropped so height and width are multiples of 8</strong> so every 8×8 block is well-defined. File sizes and PSNR/SSIM are then measured against that same preprocessed reference so encoder and decoder agree on geometry.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: sample frame from imagecompression.info or a crop showing 16-bit dynamic range).</p>
+                        </div>
+                        <figcaption>Figure (optional): dataset or preprocessing example.</figcaption>
+                    </figure>
+                </section>
+
+                <section class="content-section">
+                    <h2>How a baseline JPEG compression pipeline works</h2>
+                    <p>
+                        <strong>JPEG</strong> (baseline / sequential DCT mode in ITU-T T.81) is the usual reference for block-transform image coding. At a high level, the <em>encoder</em> chain is:
+                    </p>
+                    <ol style="color: var(--text-muted); max-width: 800px; margin: 0 0 1rem 1.25rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Color transform.</strong> RGB is mapped to a luma and chroma space (e.g. YCbCr). Chroma is often subsampled (4:2:0 or 4:2:2) because the eye is less sensitive to fine color detail than to brightness.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Blocking.</strong> Each component is tiled into non-overlapping 8×8 pixel blocks.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Forward DCT.</strong> Each block is transformed with a 2-D 8×8 discrete cosine transform so most signal energy sits in a few low-frequency coefficients.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Quantization.</strong> DCT coefficients are divided by integers from a quantization table and rounded. This is the main <em>lossy</em> step: high frequencies are pushed toward zero aggressively.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Reorder.</strong> Coefficients are read in a zig-zag order so low frequencies (and long runs of zeros after quantization) come first.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>DC coding.</strong> The DC term of each block is strongly correlated with its neighbors, so JPEG stores <strong>differences</strong> between consecutive DC values (DPCM) instead of raw DCs.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>AC coding.</strong> The remaining AC coefficients are run-length coded on zeros, then the symbols are entropy-coded (Huffman in baseline mode).</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Bitstream.</strong> Tables, image dimensions, and Huffman code definitions are packed with markers into the final <code>.jpg</code> byte stream. The <em>decoder</em> reverses each step: parse headers, Huffman decode, inverse RLE, reconstruct DCs from differences, dequantize, inverse DCT, upsample chroma if needed, inverse color transform.</li>
+                    </ol>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <img src="assets/jpeg-encoding.gif" alt="JPEG pipeline diagram">
+                        </div>
+                        <figcaption>Figure X: DCT-based JPEG encoder processing steps. Source: <a href="https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/jpeg/jpeg/encoder.htm">CMLAB NTU</a>.</figcaption>
+                    </figure>
+                    <p>
+                        Our project reuses the same conceptual ordering (transform, quantize, separate DC path, entropy code) but swaps in our own color front-end, tables, and file container where we experiment.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>How <code>hybrid_hf_compression</code> works</h2>
+                    <p>
+                        The hybrid pipeline in <code>codec/pipelines/hybrid_hf_compression.py</code> is our main end-to-end codec. It is designed to mirror JPEG’s block-DCT + DC prediction + Huffman story, but it operates on <strong>PCA-decorrelated “eigen-channels”</strong> instead of YCbCr and writes a custom <code>.uofm</code> container. Encoder order:
+                    </p>
+                    <ol style="color: var(--text-muted); max-width: 800px; margin: 0 0 1rem 1.25rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Load.</strong> Read the 16-bit RGB image and crop to a multiple of 8 (same preprocessing idea as above).</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>PCA color decorrelation.</strong> Treat each pixel’s 3-vector across RGB; learn a rotation (plus means) so the first axis carries most energy. The decoder stores <code>Vᵀ</code> and means to invert this step after reconstruction.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Block.</strong> Split each PCA channel into 8×8 spatial blocks.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>DCT.</strong> Apply an orthonormal 2-D DCT per block and channel, the same frequency-domain role as JPEG’s DCT.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Quantization.</strong> Use a single programmable 8×8 quantization matrix as a base. The <strong>first PCA channel</strong> uses that matrix as-is (detail-preserving). The <strong>second and third</strong> channels use the same matrix scaled by <strong>6×</strong> so chroma-like components are quantized more coarsely, analogous to JPEG’s harsher chroma tables.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Zig-zag and stream split.</strong> For every quantized block, zig-zag flatten; collect the <strong>DC</strong> coefficient into one stream and run-length encode only the <strong>63 AC</strong> coefficients into a global AC tuple list.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>DPCM on DCs.</strong> Replace the raw DC sequence with first-order differences so Huffman sees a tighter histogram, matching the JPEG DC idea.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Huffman.</strong> Build two separate Huffman bitstreams: one for DC deltas, one for AC run-length symbols. Symbol frequency tables for each stream are saved as metadata for decoding.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Package.</strong> Save image shape, PCA parameters, Huffman counts, and both byte streams in the project container format (<code>save_uofm_container</code>).</li>
+                    </ol>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: hybrid pipeline vs JPEG, or dual Huffman stream sketch).</p>
+                        </div>
+                        <figcaption>Figure (optional): hybrid <code>hybrid_hf_compression</code> overview.</figcaption>
+                    </figure>
+                    <p>
+                        <strong>Decoding</strong> loads the container, Huffman-decodes the two streams, inverts DPCM to recover DCs, merges DCs with decoded AC zig-zag data into 8×8 blocks, dequantizes with the same per-channel scaling, inverse DCT, unblock, then inverse PCA to return RGB. Metrics (PSNR, SSIM) compare the reconstructed 16-bit image to the preprocessed original on a 0 to 1 float scale.
+                    </p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+        </div>
+    </footer>
+
+</body>
+</html>
