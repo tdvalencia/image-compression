@@ -212,6 +212,7 @@
             <div class="logo">Image compression</div>
             <div class="nav-links">
                 <a href="#overview">Overview</a>
+                <a href="#methods">Methods</a>
                 <a href="#progress">Progress</a>
                 <a href="#data">Data plots</a>
                 <a href="#plan">Plan</a>
@@ -228,24 +229,84 @@
 
     <main class="container">
      <section id="overview" class="content-section">
-    <h2>Project Overview</h2>
+        <h2>Project Overview</h2>
+    
+            <p>
+                Digital images require significant storage space and network bandwidth, making efficient compression essential for modern applications such as websites, mobile devices, streaming platforms, and cloud storage. The goal of this project was to design and evaluate a custom image compression codec capable of reducing file size while preserving perceptual image quality.
+            </p>
+        
+            <p>
+                By combining classical DSP tools with modern coding strategies, we created and benchmarked several compression pipelines against existing standards such as JPEG. Performance was evaluated using compression ratio, bits per pixel, PSNR, SSIM, runtime, and visual reconstruction quality.
+            </p>
+        
+        </section>   
+    
+        
+      <section id="methods" class="content-section">
+            <h2>Methods</h2>
+        
+            <p>
+                Our project explored multiple image compression techniques that combine transform coding, predictive coding, dimensionality reduction, and entropy encoding.
+        
+            <h3>1. Discrete Cosine Transform (DCT)</h3>
+            <p>
+                The Discrete Cosine Transform was one of the primary methods used in this project. Images were divided into 8×8 blocks, and each block was transformed from the spatial domain into the frequency domain. This concentrates most of the image energy into a small number of low-frequency coefficients. High-frequency coefficients, which are less noticeable to the human eye, can then be reduced or removed for compression. This same principle is widely used in JPEG compression.
+            </p>
+        
+            <h3>2. Quantization</h3>
+            <p>
+                Quantization reduces the precision of transformed coefficients after the DCT stage. Smaller high-frequency values are rounded or discarded, significantly lowering the amount of data that must be stored. This process is one of the main reasons lossy compression can achieve high compression ratios.
+            </p>
+        
+            <h3>3. Singular Value Decomposition (SVD)</h3>
+            <p>
+                As an alternative compression strategy, we implemented Singular Value Decomposition. SVD factorizes the image matrix into three matrices and allows reconstruction using only the largest singular values. By keeping only the most significant components, the image can be approximated with reduced storage requirements while preserving major image structure.
+            </p>
+        
+            <h3>4. Principal Component Analysis (PCA)</h3>
+            <p>
+                PCA was explored as another dimensionality-reduction method closely related to SVD. PCA compresses data by projecting images onto the most informative principal components and discarding less significant variation.
+            </p>
+        
+            <h3>5. Huffman Encoding</h3>
+            <p>
+                Huffman coding was implemented as a lossless entropy encoder. Frequently occurring symbols were assigned shorter binary codes, while rare symbols received longer codes. This reduced the average number of bits required to store transformed image data.
+            </p>
+        
+            <h3>6. Arithmetic Encoding</h3>
+            <p>
+                Arithmetic coding was also explored as a higher-efficiency entropy coding method. Instead of assigning fixed symbol codes, it encodes an entire message into a fractional interval based on symbol probabilities. This can outperform Huffman coding at the cost of higher computational complexity.
+            </p>
+        
+            <h3>7. Asymmetric Numeral Systems (ANS)</h3>
+            <p>
+                ANS coding was tested as a modern alternative to arithmetic coding. It achieves strong compression efficiency while maintaining faster execution speeds, making it useful in practical high-performance codecs.
+            </p>
+        
+            <h3>8. Run-Length Encoding (RLE)</h3>
+            <p>
+                Run-Length Encoding was included to compress repeated sequences of values, especially long runs of zeros created after quantization. This method is commonly used as a preprocessing stage before entropy coding.
+            </p>
+        
+            <h3>9. Differential Pulse Code Modulation (DPCM)</h3>
+            <p>
+                DPCM was explored as a predictive coding method. Instead of storing raw values directly, it stores differences between neighboring pixels or coefficients. Since nearby image values are often highly correlated, these differences are smaller and easier to encode efficiently.
+            </p>
+        
+            <h3>10. Hybrid Compression Pipelines</h3>
+            <p>
+                The strongest overall results were obtained by combining multiple techniques into hybrid pipelines, such as DCT followed by quantization and entropy coding. These systems remove redundancy in multiple stages and typically outperform any single standalone method.
+            </p>
+        
+            <h3>11. Performance Evaluation</h3>
+            <p>
+                Because image compression requires balancing size and quality, performance was evaluated using storage ratio, file size reduction, SSIM, PSNR, and side-by-side visual comparisons between original and reconstructed images.
+            </p>
+        </section>
+        
 
-    <p>
-        Digital images require significant storage space and network bandwidth, making efficient compression essential for modern applications such as websites, mobile devices, streaming platforms, and cloud storage. The goal of this project was to design and evaluate a custom image compression codec capable of reducing file size while preserving perceptual image quality.
-    </p>
-
-    <p>
-        Our approach focused on lossy compression, where visually insignificant information can be removed to achieve stronger compression ratios than traditional lossless methods. We explored multiple techniques including the Discrete Cosine Transform (DCT), Singular Value Decomposition (SVD), quantization, and entropy coding methods such as Huffman and ANS coding.
-    </p>
-
-    <p>
-        By combining classical DSP tools with modern coding strategies, we created and benchmarked several compression pipelines against existing standards such as JPEG. Performance was evaluated using compression ratio, bits per pixel, PSNR, SSIM, runtime, and visual reconstruction quality.
-    </p>
-
-    <p>
-        This project demonstrates how signal processing principles remain highly relevant in modern multimedia systems and how hybrid methods can produce efficient compression without major sacrifices in image fidelity.
-    </p>
-</section>   
+        
+        
         <section id="progress" class="content-section">
             <h2>Project progress &amp; Challenges</h2>
             <h3>Direction and Dataset</h3>
