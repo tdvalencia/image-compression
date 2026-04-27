@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>svd / pca</title>
     <link rel="stylesheet" href="css/site.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)'], ['$', '$']],
+                displayMath: [['\\[', '\\]'], ['$$', '$$']],
+            },
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body class="site-shell">
 
@@ -29,7 +38,7 @@
                 <a href="quantization.html">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
-                <a href="reflection.html">reflection</a>
+                <a href="results.html">results</a>
                 <a href="references.html">references</a>
                 <a href="team.html">team</a>
             </nav>
@@ -43,35 +52,58 @@
 
             <main>
                 <section class="content-section">
-                    <h2>Singular value decomposition (SVD)</h2>
+                    <h2>Goal</h2>
                     <p>
-                        SVD expresses a 2D channel as <strong>U Σ Vᵀ</strong>. Truncating small singular values yields a controlled rank approximation: fewer parameters to store, smooth denoising-like behavior, and a direct knob (how many singular vectors to keep) on rate versus distortion.
+                        Make the image easier to compress <em>before</em> we start blocking and transforming. In our main codec we use PCA as a
+                        <strong>color decorrelation front-end</strong> so most energy concentrates in the first component and the remaining components can be quantized more aggressively.
                     </p>
                     <p>
-                        We explored SVD as an alternative spatial representation to DCT blocks. It is flexible but can be expensive on large matrices and needs careful quantization of <code>U</code>, <code>Σ</code>, and <code>Vᵀ</code> factors for a practical codec.
+                        We also explored SVD as a possible low-rank spatial model, but it is not the primary representation in the hybrid Huffman pipeline.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Math</h2>
+                    <h3>PCA (used in the hybrid pipeline)</h3>
+                    <p>
+                        Treat each pixel as a 3-vector \(x \in \mathbb{R}^3\). PCA finds an orthonormal basis that decorrelates RGB by rotating into “eigen-channels”.
+                        In practice we store the rotation and the mean so the decoder can invert the transform.
+                    </p>
+                    <p>
+                        Encoder: \(y = V^T (x - \mu)\). Decoder: \(x \approx V y + \mu\).
+                    </p>
+
+                    <h3>SVD (exploration)</h3>
+                    <p>
+                        For a single 2D channel matrix \(A\), SVD writes \(A = U \Sigma V^T\). Truncating small singular values yields a rank-\(k\) approximation that can reduce the
+                        number of degrees of freedom, but it is computationally heavier and needs careful quantization/packing of factors for a practical codec.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Code</h2>
+                    <p>
+                        The hybrid pipeline performs PCA as its first step:
+                        <code>codec/pipelines/hybrid_hf_compression.py</code> calls <code>pca.apply_pca_prefilter</code>.
+                        The implementation lives in <code>codec/encoders/pca.py</code>.
+                    </p>
+                    <p>
+                        Decoder-side metadata for PCA (stored in the container) includes <code>pca_Vt</code> and <code>pca_means</code> so reconstruction can invert the rotation.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: singular value decay plot or low-rank reconstruction).</p>
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: RGB vs PCA eigen-channel false color, or PCA matrix illustration).</p>
                         </div>
-                        <figcaption>Figure (optional): SVD truncation or spectrum.</figcaption>
+                        <figcaption>Figure (optional): PCA color decorrelation front-end.</figcaption>
                     </figure>
                 </section>
 
                 <section class="content-section">
-                    <h2>PCA color prefilter</h2>
+                    <h2>Hand-off</h2>
                     <p>
-                        In the hybrid Huffman pipeline we run <strong>PCA across the three RGB channels</strong> at each pixel (treating the whole image as a set of 3-vectors). That produces decorrelated “eigen-channels” so energy in chroma can be quantized more aggressively than the first principal component, which behaves like a luminance-heavy axis.
+                        Output is a 3-channel PCA-rotated image in floating point (plus metadata: <code>Vᵀ</code> and means). Next stage is <a href="dct.html">blocking + DCT</a>,
+                        followed by <a href="quantization.html">quantization</a> with heavier scaling on the second and third PCA components.
                     </p>
-                    <p>
-                        The rotation matrix <code>Vᵀ</code> and per-channel means are stored as metadata so the decoder can invert PCA after inverse DCT and deblocking. See <code>codec/encoders/pca.py</code> and the hybrid compressor for the exact pre/post steps.
-                    </p>
-                    <figure class="doc-figure-slot">
-                        <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: RGB vs PCA eigen-channel false color).</p>
-                        </div>
-                        <figcaption>Figure (optional): PCA color decorrelation.</figcaption>
-                    </figure>
                 </section>
             </main>
         </div>
