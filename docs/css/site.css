@@ -365,22 +365,6 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     max-width: 800px;
 }
 
-.content-section ul,
-.content-section ol {
-    color: var(--text-muted);
-    max-width: 800px;
-    margin: 0 0 1rem 2rem;
-    padding-left: 0.25rem;
-}
-
-.content-section li {
-    margin-bottom: 0.5rem;
-}
-
-.content-section li:last-child {
-    margin-bottom: 0;
-}
-
 .content-section a {
     color: var(--primary-color);
 }

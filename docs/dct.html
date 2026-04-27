@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dct</title>
     <link rel="stylesheet" href="css/site.css">
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['\\(', '\\)'], ['$', '$']],
-                displayMath: [['\\[', '\\]'], ['$$', '$$']],
-            },
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body class="site-shell">
 
@@ -38,7 +29,7 @@
                 <a href="quantization.html">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
-                <a href="results.html">results</a>
+                <a href="reflection.html">reflection</a>
                 <a href="references.html">references</a>
                 <a href="team.html">team</a>
             </nav>
@@ -52,9 +43,12 @@
 
             <main>
                 <section class="content-section">
-                    <h2>Goal</h2>
+                    <h2>What we use it for</h2>
                     <p>
                         After optional color transforms (see <a href="svd-pca.html">svd / pca</a>), we reshape the image into non-overlapping <strong>8×8</strong> blocks per channel. A <strong>type-II DCT with orthonormal normalization</strong> is applied in 2D on each block so energy concentrates in a few low-frequency coefficients. That concentration is what makes aggressive quantization and run-length coding worthwhile.
+                    </p>
+                    <p>
+                        In code, the hybrid pipeline applies <code>dctn</code> on the blocked tensor (spatial axes of each block). The inverse path uses the matching <code>idctn</code> with the same normalization so round-trip is consistent.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
@@ -65,25 +59,15 @@
                 </section>
 
                 <section class="content-section">
-                    <h2>Math</h2>
+                    <h2>Zig-zag &amp; DC / AC split</h2>
                     <p>
-                        Each 8×8 block is mapped from the spatial basis into a cosine basis so that most natural-image energy lands in the lowest-frequency coefficients. With orthonormal normalization (\(<code>norm='ortho'</code>\)), forward and inverse transforms are numerically consistent.
+                        For entropy coding we reorder each quantized block into a zig-zag scan: the <strong>DC</strong> term (average intensity of the block) is handled separately from <strong>AC</strong> coefficients. AC values are run-length encoded on zeros; the DC sequence is highly correlated block-to-block, so we run <a href="dpcm.html">DPCM</a> on the DCs before entropy coding.
                     </p>
                 </section>
 
                 <section class="content-section">
-                    <h2>Code</h2>
-                    <p>
-                        In <code>codec/pipelines/hybrid_hf_compression.py</code> we apply SciPy’s <code>dctn</code> across the spatial axes of each block (<code>axes=(3, 4)</code>).
-                        The decoder uses the matching <code>idctn</code> with the same normalization.
-                    </p>
-                    <p>
-                        The DCT operates on the blocked tensor produced by <code>codec/tools.py</code> (<code>block_image</code>), and it produces a tensor of frequency coefficients that is immediately fed into
-                        <a href="quantization.html">quantization</a>.
-                    </p>
-                    <p style="color: var(--text-muted); margin-top: -0.25rem;">
-                        Note: zig-zag reordering and DC/AC stream separation are part of our serialization step and are implemented in <code>codec/encoders/run_length.py</code> (see <a href="entropy.html">entropy encoders</a> and <a href="dpcm.html">dpcm</a>).
-                    </p>
+                    <h2>Figures</h2>
+                    <p>Same DCT-focused figures that appear in the <a href="progress.html#figures">progress report</a>, shown here for the technique page.</p>
                     <div class="plot-grid">
                         <div class="plot-card">
                             <img src="assets/deer-original.png" alt="Original deer test image" class="plot-image">
@@ -114,14 +98,6 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <section class="content-section">
-                    <h2>Hand-off</h2>
-                    <p>
-                        Output is a per-block frequency tensor. Next we apply <a href="quantization.html">quantization</a>, then serialize blocks using zig-zag order, split DC and AC streams, run
-                        <a href="dpcm.html">DPCM</a> on the DC stream, and finally entropy encode both streams (see <a href="entropy.html">entropy encoders</a>).
-                    </p>
                 </section>
             </main>
         </div>
