@@ -1,11 +1,12 @@
 .DS_Store
-images
+images/
 env
 
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.zip
 
 # compressed files
 compressed_outputs/
