@@ -48,10 +48,15 @@
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: DC sequence before/after DPCM).</p>
+                            <img src="assets/dpcm-pipeline.png" alt="DPCM pipeline" class="plot-image">
                         </div>
-                        <figcaption>Figure (optional): DC correlation along raster order.</figcaption>
+                        <figcaption>
+                            DPCM pipeline applied to DC coefficients: differences are computed and then encoded for compression.
+                        </figcaption>
                     </figure>
+                    <p>
+                        This pipeline shows how DPCM compresses DC coefficients by encoding differences between neighboring blocks. These differences are easier to compress using entropy coding, and the original values are later reconstructed by reversing the process.
+                    </p>
                 </section>
 
                 <section class="content-section">
@@ -62,12 +67,72 @@
                     <p>
                         On decode we invert DPCM to recover the DC sequence, merge DCs back with decoded AC zig-zag data, and continue with inverse quantization and IDCT. Implementation: <code>codec/encoders/dpcm.py</code>, wired in <code>hybrid_hf_compression.py</code>.
                     </p>
+                    <h3>Examples</h3>
+                        <p>
+                            A sequence of DC values might look like:
+                        </p>
+                        <pre>Original DC: 120, 123, 125, 126, 124
+                        DPCM Output: 120, 3, 2, 1, -2</pre>
+                        <p>
+                            Mathematically, DPCM computes the difference between consecutive values using:
+                        </p>
+                        
+                        <p style="font-family: monospace;">
+                            d[0] = x[0] <br>
+                            d[i] = x[i] − x[i−1]
+                        </p>
+                        
+                        <p>
+                            Applying this to the example:
+                        </p>
+                        
+                        <pre>
+                        d[0] = 120  
+                        d[1] = 123 − 120 = 3  
+                        d[2] = 125 − 123 = 2  
+                        d[3] = 126 − 125 = 1  
+                        d[4] = 124 − 126 = -2
+                        </pre>
+                        
+                        <p>
+                            These smaller difference values replace the original DC values and are what get passed to entropy coding. Entropy coding methods such as Huffman coding can represent them using fewer bits.
+                        </p>
+                    
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: delta histogram vs raw DC histogram).</p>
+                            <img src="assets/dpcm-plot.png" alt="DPCM DC vs differences plot" class="plot-image">
                         </div>
-                        <figcaption>Figure (optional): DPCM on DC coefficients.</figcaption>
+                        <figcaption>
+                            DC values vary smoothly across blocks, while DPCM differences are much smaller and centered near zero.
+                        </figcaption>
                     </figure>
+                    <ul>
+                        <li>The top plot shows the original DC coefficients, which vary smoothly across neighboring block indices.</li>
+                        <li>This smooth variation indicates strong spatial correlation and redundancy in the image.</li>
+                        <li>The bottom plot shows the DPCM differences, which are much smaller in magnitude.</li>
+                        <li>Most of these values are clustered near zero, indicating reduced variation.</li>
+                        <li>The first value is large because it stores the initial reference (anchor) to enable reconstruction.</li>
+                    </ul>
+                    
+                    <p>
+                        Overall, DPCM reduces redundancy by converting a smooth signal into small, near-zero differences, making the data more efficient to compress.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Observed Results</h2>
+                
+                    <p>
+                        Applying DPCM to DC coefficients significantly reduces redundancy by converting a smooth signal into small differences. This produces a tighter distribution of values centered near zero.
+                    </p>
+                
+                    <p>
+                        As a result, entropy coding becomes more efficient, since smaller and more frequent values require fewer bits to encode. DPCM improves compression without affecting image quality because it is a fully reversible process.
+                    </p>
+                
+                    <p>
+                        <strong>Summary:</strong> DPCM improves compression efficiency by encoding differences instead of absolute values, reducing redundancy in the DC signal.
+                    </p>
                 </section>
             </main>
         </div>
