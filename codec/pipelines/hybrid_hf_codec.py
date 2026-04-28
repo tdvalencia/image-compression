@@ -204,8 +204,6 @@ if __name__ == '__main__':
     print(f'Compressed file bytes: {compressed_size:,}')
     print(f'Compression ratio: {compression_ratio:.2f}:1')
 
-    from skimage.metrics import structural_similarity as ssim_metric
-
     ct.plot_zoomed_comparison(float_original, float_reconstructed, title="Hybrid HF Compression")
 
     import matplotlib.pyplot as plt
