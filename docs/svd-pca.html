@@ -29,7 +29,7 @@
                 <a href="quantization.html">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
-                <a href="results.html">results</a>
+                <a href="results.html">reflection</a>
                 <a href="references.html">references</a>
             </nav>
         </aside>
@@ -44,26 +44,53 @@
                 <section class="content-section">
                     <h2>Singular value decomposition (SVD)</h2>
                     <p>
-                        SVD expresses a 2D channel as <strong>U Σ Vᵀ</strong>. Truncating small singular values yields a controlled rank approximation: fewer parameters to store, smooth denoising-like behavior, and a direct knob (how many singular vectors to keep) on rate versus distortion.
+                        Singular Value Decomposition (SVD) factorizes a 2D image channel into three matrices:
+                        U Σ Vᵀ, where the columns of <code>U</code> and <code>V</code> represent orthonormal spatial patterns, 
+                        and <code>Σ</code> contains singular values that scale their importance. Intuitively, SVD expresses an image as a weighted sum 
+                        of rank-1 outer products (basis images).
                     </p>
                     <p>
-                        We explored SVD as an alternative spatial representation to DCT blocks. It is flexible but can be expensive on large matrices and needs careful quantization of <code>U</code>, <code>Σ</code>, and <code>Vᵀ</code> factors for a practical codec.
+                        A key property for compression is that the singular values typically decay rapidly. By keeping only the top 
+                        <code>k</code> singular values (and their corresponding vectors), we form a low-rank approximation of the image. 
+                        This reduces storage from <code>O(N²)</code> to <code>O(kN)</code>, while preserving most of the visual energy. The parameter 
+                        <code>k</code> acts as a direct control over the rate-distortion tradeoff: smaller <code>k</code> yields higher compression 
+                        but more loss.
+                    </p>
+                    <p>
+                        Compared to block-based transforms like the DCT, SVD operates globally (or on large patches), which avoids blocking artifacts 
+                        and often produces smooth, denoised reconstructions. However, computing SVD is significantly more expensive, and storing the factor
+                        matrices (<code>U</code>, <code>Σ</code>, <code>Vᵀ</code>) requires careful quantization and encoding to be competitive in a practical codec.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: singular value decay plot or low-rank reconstruction).</p>
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/svd" alt="https://timbaumann.info/svd-image-compression-demo/"&gt;</code> here (example: singular value decay plot or low-rank reconstruction).</p>
                         </div>
-                        <figcaption>Figure (optional): SVD truncation or spectrum.</figcaption>
+                        <figcaption>SVD truncation</figcaption>
                     </figure>
                 </section>
 
                 <section class="content-section">
                     <h2>PCA color prefilter</h2>
                     <p>
-                        In the hybrid Huffman pipeline we run <strong>PCA across the three RGB channels</strong> at each pixel (treating the whole image as a set of 3-vectors). That produces decorrelated “eigen-channels” so energy in chroma can be quantized more aggressively than the first principal component, which behaves like a luminance-heavy axis.
+                        Principal Component Analysis (PCA) is used as a color-space transformation prior to spatial compression. 
+                        Instead of encoding the RGB channels directly, we treat each pixel as a 3D vector and compute the principal components 
+                        across the entire image. This produces a new orthogonal basis where the channels are decorrelated.
                     </p>
                     <p>
-                        The rotation matrix <code>Vᵀ</code> and per-channel means are stored as metadata so the decoder can invert PCA after inverse DCT and deblocking. See <code>codec/encoders/pca.py</code> and the hybrid compressor for the exact pre/post steps.
+                        The first principal component captures the largest variance in the data and typically resembles a luminance-like channel, 
+                        while the remaining components capture chrominance information. Because human vision is less sensitive to chroma detail, 
+                        these secondary components can be more aggressively quantized without significant perceptual loss.
+                    </p>
+                    <p>
+                        Mathematically, PCA computes a rotation matrix <code>Vᵀ</code> from the covariance of the RGB data. Each pixel is transformed 
+                        into this new basis after mean-centering:
+                    </p>
+                    <p>
+                        <code>y = Vᵀ (x - μ)</code>
+                    </p>
+                    <p>
+                        where <code>μ</code> is the mean RGB vector. The transformed channels are then passed through the rest of the compression 
+                        pipeline (DCT, quantization, entropy coding). At the decoder, the inverse transform reconstructs the original color space.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
