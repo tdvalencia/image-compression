@@ -113,9 +113,25 @@
                             The DCT results clearly demonstrate how image energy is concentrated in low-frequency components. When transformed into the frequency domain, most important visual information is contained in only a few coefficients. The original image was approximately 1.2 MB, while the compressed version using aggressive coefficient reduction was under 200 KB, demonstrating a compression ratio greater than 5×.
                         </p>
                     <table>
-                    <tr><th>Method</th><th>Quality</th><th>Compression</th></tr>
-                    <tr><td>1 coefficient</td><td>Low</td><td>~6–8×</td></tr>
-                    <tr><td>3 coefficients</td><td>Moderate</td><td>~4–6×</td></tr>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Quality</th>
+                                <th>Compression</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 coefficient</td>
+                                <td>Low</td>
+                                <td>~6–8×</td>
+                            </tr>
+                            <tr>
+                                <td>3 coefficients</td>
+                                <td>Moderate</td>
+                                <td>~4–6×</td>
+                            </tr>
+                        </tbody>
                     </table>
                         <p>
                             When keeping only <strong>one coefficient per 8×8 block (DC component)</strong>, the image is heavily compressed. The reconstructed image retains overall brightness and structure but loses nearly all fine detail. This corresponds to a very high compression ratio of approximately <strong>6–8×</strong>, but with noticeable visual degradation.
