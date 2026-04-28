@@ -14,10 +14,10 @@ from skimage.metrics import structural_similarity as ssim_metric
 import codec.tools as ct
 
 # Swap codec by changing the import (same ``compress_image`` / ``reconstruct_image`` API):
-import codec.pipelines.hybrid_hf_codec as custom_codec
-# import codec.pipelines.dct_hf_codec as custom_codec
-# import codec.pipelines.dct_ans_codec as custom_codec
-# import codec.pipelines.dct_ae_codec as custom_codec
+#import codec.pipelines.hybrid_hf_codec as custom_codec
+#import codec.pipelines.dct_hf_codec as custom_codec
+#import codec.pipelines.dct_ans_codec as custom_codec
+import codec.pipelines.dct_ae_codec as custom_codec
 
 IMAGE_DIR = 'images/rgb16bit/'
 TEMP_OUT = 'temp_batch_custom.uofm'
@@ -48,7 +48,7 @@ def run_directory_benchmark():
     print("-" * len(header))
 
     # Track overall winners
-    tally = {'custom_ssim': 0, 'jpeg_ssim': 0, 'custom_psnr': 0, 'jpeg_psnr': 0}
+    tally = {'custom_ssim': 0, 'jpeg_ssim': 0, 'custom_psnr': 0, 'jpeg_psnr': 0, 'custom_size': 0, 'jpeg_size': 0}
 
     for img_path in ppm_files:
         base_name = os.path.basename(img_path)
@@ -57,15 +57,20 @@ def run_directory_benchmark():
         original_16bit = ct.load_and_preprocess_image(img_path)
         original_float = original_16bit.astype(np.float32) / 65535.0
 
+       
         # 2. RUN CUSTOM PIPELINE
-        custom_codec.compress_image(img_path, TEMP_OUT)
-        custom_bytes = os.path.getsize(TEMP_OUT)
-        
-        reconstructed_16bit = custom_codec.reconstruct_image(TEMP_OUT)
-        custom_float = reconstructed_16bit.astype(np.float32) / 65535.0
-        
-        custom_ssim = calculate_ssim(original_float, custom_float)
-        custom_psnr = calculate_psnr(original_float, custom_float)
+        try:
+            custom_codec.compress_image(img_path, TEMP_OUT)
+            custom_bytes = os.path.getsize(TEMP_OUT)
+            
+            reconstructed_16bit = custom_codec.reconstruct_image(TEMP_OUT)
+            custom_float = reconstructed_16bit.astype(np.float32) / 65535.0
+            
+            custom_ssim = calculate_ssim(original_float, custom_float)
+            custom_psnr = calculate_psnr(original_float, custom_float)
+        except Exception as e:
+            print(f"{base_name[:18]:<18} | ERROR: {e}")
+            continue
 
         # 3. RUN JPEG MATCHING LOOP
         original_8bit = (original_float * 255).astype(np.uint8)
@@ -108,6 +113,9 @@ def run_directory_benchmark():
         if custom_psnr > jpeg_psnr: tally['custom_psnr'] += 1
         else: tally['jpeg_psnr'] += 1
 
+        if custom_bytes < jpeg_bytes: tally['custom_size'] += 1
+        else: tally['jpeg_size'] += 1
+
         # 5. PRINT ROW
         size_str = f"{custom_bytes/1024:.1f} / {jpeg_bytes/1024:.1f}"
         psnr_str = f"{custom_psnr:.2f} / {jpeg_psnr:.2f}"
@@ -119,6 +127,7 @@ def run_directory_benchmark():
     print("FINAL TALLY:")
     print(f"  SSIM Wins -> Custom: {tally['custom_ssim']} | JPEG: {tally['jpeg_ssim']}")
     print(f"  PSNR Wins -> Custom: {tally['custom_psnr']} | JPEG: {tally['jpeg_psnr']}")
+    print(f"  Size Wins -> Custom: {tally['custom_size']} | JPEG: {tally['jpeg_size']}")
 
     # Clean up
     if os.path.exists(TEMP_OUT):

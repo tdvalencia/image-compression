@@ -41,15 +41,116 @@
             </header>
 
             <main>
+
                 <section class="surface-card">
                     <p class="lead">
-                        This page is the results hub. Put the headline quantitative outcomes here (rate vs PSNR/SSIM curves, best settings, runtime notes),
-                        then link to each technique page for the detailed Goal → Math → Code → Hand-off breakdown.
-                    </p>
-                    <p style="color: var(--text-muted);">
-                        Placeholder: edit <code>docs/results.html</code> with your final figures and key takeaways.
+                        Each codec was tested against JPEG over 14 test images from the RGB 16-bit dataset.
+                        The JPEG's quality is adjusted to match the file size to our codec's output,
+                        making this a direct apples-to-apples rate-distortion comparison.
+                        Metrics testing are PSNR and SSIM — both higher is better. Compression ratios are
+                        calculated against the original uncompressed PPM file sizes.
                     </p>
                 </section>
+
+                <section class="surface-card">
+                    <h2>Hybrid HF Codec</h2>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
+AVERAGES (Custom / JPEG):
+  PSNR: 31.13 dB / 34.32 dB  (90.7% of JPEG)
+  SSIM: 0.7889  / 0.8638     (91.3% of JPEG)</pre>
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 200px;">
+COMPRESSION RATIO:
+  Best:    136:1  (fireworks.ppm)
+  Worst:    70:1  (leaves_iso_1600.ppm)
+  Average: ~100:1</pre>
+                    </div>
+                   <p>
+    The hybrid HF codec is our best performer in terms of file size, achieving an average compression
+    ratio of around 100:1. However, it trails JPEG on both PSNR and SSIM across the board. The main reason 
+    is that our encoder wastes bits on zeros — after quantization, most DCT blocks are filled with zeros, and our 
+    Huffman coder still encodes them as symbols. JPEG handles this much cleaner by simply stopping when it hits
+    trailing zeros in a block. Fixing this would free up a lot of bits and directly improve quality.
+</p>
+                </section>
+
+                <section class="surface-card">
+                    <h2>DCT HF Codec</h2>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                       <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
+AVERAGES (Custom / JPEG):
+  PSNR: 31.40 dB / 35.24 dB  (89.1% of JPEG)
+  SSIM: 0.8181  / 0.8704     (94.0% of JPEG)</pre>
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 200px;">
+COMPRESSION RATIO:
+  Best:    122:1  (fireworks.ppm)
+  Worst:    57:1  (big_building.ppm)
+  Average:  ~78:1</pre>
+                    </div>
+                    <p>
+    The DCT HF codec averages around 78:1 compression and was actually the only codec to beat JPEG 
+    on a quality metric — it edged out JPEG on SSIM for <strong>fireworks.ppm</strong> (0.9364 vs 
+    0.9060). But it still falls behind JPEG on PSNR across all 14 images. A big part of this comes down to 
+    quantization — JPEG's quantization tables have been fine-tuned over decades to match how the human eye actually 
+    perceives image quality, being more aggressive with high-frequency details that we don't notice as much. Ours is more 
+    uniform, so we end up throwing away some of the wrong information and losing quality that we didn't need to lose.
+</p>
+                </section>
+
+               <section class="surface-card">
+    <h2>DCT ANS Codec</h2>
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+       <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
+AVERAGES (Custom / JPEG):
+  PSNR: 31.57 dB / 35.62 dB  (88.6% of JPEG)
+  SSIM: 0.8249  / 0.8784     (93.9% of JPEG)</pre>
+        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 200px;">
+COMPRESSION RATIO:
+  Best:     81:1  (fireworks.ppm)
+  Worst:    41:1  (big_building.ppm)
+  Average:  ~60:1</pre>
+    </div>
+   <p>
+    The DCT ANS codec ended up with the largest file sizes out of the three, averaging around 60:1 compression compared 
+    to ~100:1 for hybrid HF. However, the quality metrics are actually the best of the three codecs on average, 
+    but the file sizes are bigger which hurts the overall comparison. Like the other codecs, a lot of the bloat comes from
+    how we handle zeros after quantization — we're still encoding them when we don't need to, and with ANS that 
+    inefficiency adds up more than it does with Huffman.
+</p>
+   <p>
+    That said, ANS (Asymmetrical Numeral Systems) is genuinely one of the best entropy coders out there — it's used in modern codecs 
+    like Zstandard and AV1 for a reason. If we had more time, a cleaner ANS implementation combined with better quantization and proper 
+    zero handling could realistically get us past JPEG. It's probably the most promising direction for 
+    improvement.
+</p>
+
+                </section>
+
+                <section class="surface-card">
+                    <h2>Where We Fall Short and What Could Fix It</h2>
+                    <p>
+                        Three consistent weaknesses explain why all our codecs trail JPEG on quality metrics:
+                    </p>
+                    <ul>
+           <li>
+    <strong>Encoding zeros wastes bits.</strong> After quantization, most of a DCT block ends up 
+    as zeros, especially in the high-frequency corners. Instead of skipping them, our encoder 
+    codes them as symbols anyway, which bloats the file. JPEG just stops when it hits trailing 
+    zeros in a block, which saves a lot of space. Adding something like that to 
+    our pipeline would be a pretty solid improvement
+</li>
+
+<li>
+    <strong>The arithmetic coder has a precision bug.</strong> Our DCT AE codec crashes on every 
+    image we tested. The issue is that when there are a lot of unique symbols, the probabilities 
+    get so small that the floating point math breaks down. It never actually produces results, 
+    which is a shame because arithmetic coding is theoretically more efficient than Huffman. 
+    Getting this working properly would be a big step forward and might be what it takes to 
+    actually beat JPEG.
+</li>
+                    </ul>
+                </section>
+
             </main>
         </div>
     </div>
