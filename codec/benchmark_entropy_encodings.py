@@ -3,8 +3,8 @@ import glob
 import pickle
 import numpy as np
 import codec.tools as ct
-from codec.pipelines.dct_ans_compression import compress_with_dct_and_ans
-from codec.pipelines.dct_hf_compression import compress_with_dct_and_hf
+from codec.pipelines.dct_ans_codec import compress_image as compress_ans
+from codec.pipelines.dct_hf_codec import compress_image as compress_hf
 
 # Configuration
 IMAGE_DIR = 'images/rgb16bit/'
@@ -37,8 +37,8 @@ def run_benchmark():
         hf_path = os.path.join(HF_OUT_DIR, base_name.replace('.ppm', '_hf.uofm'))
 
         # Run Compressions
-        compress_with_dct_and_ans(img_path, ans_path)
-        compress_with_dct_and_hf(img_path, hf_path)
+        compress_ans(img_path, ans_path)
+        compress_hf(img_path, hf_path)
 
         # Get Raw Stats
         temp_img = ct.load_and_preprocess_image(img_path, block_size=8)
