@@ -116,9 +116,9 @@
                         <code>A: 2, B: 1, C: 4, D: 2</code>. To build the tree:
                     </p>
                     <ol>
-                        <li> Merge <code>B(1)</code> and <code>A(2)</code> to form <code>BA</code> with frequency 3</li>
-                        <li> Merge <code>D(2)</code> and <code>BA(3)</code> to form <code>DB</code> with frequency 5</li>
-                        <li> Merge <code>C(4)</code> and <code>DB(5)</code> to form <code>CDBA</code> with frequency 9</li>
+                        <li>Merge <code>B(1)</code> and <code>A(2)</code> to form <code>BA</code> with frequency 3.</li>
+                        <li>Merge <code>D(2)</code> and <code>BA(3)</code> to form <code>DB</code> with frequency 5.</li>
+                        <li>Merge <code>C(4)</code> and <code>DB(5)</code> to form <code>CDBA</code> with frequency 9.</li>
                     </ol>
                     <p>
                         Traversing the tree from the root to the leaf nodes where 0 is the left edge and 1 is the right edge, 
@@ -172,7 +172,7 @@
                     </p>
                     <p>
                         Take for example the message <code>"ABC"</code> with the frequencies <code>A: 1, B: 1, C: 1</code>. The sub-ranges would be:
-                    <p>
+                    </p>
                     <ul>
                         <li><code>A: [0, 0.33)</code></li>
                         <li><code>B: [0.33, 0.66)</code></li>
@@ -221,14 +221,18 @@
                         the State while keeping the integer from overflowing. This requires two perfectly reversible steps:
                     </p>
                     <ol>
-                        <li><strong>Renormalize (Extract Bits):</strong> First, the encoder checks if baking the symbol will push the State over the maximum limit. 
-                            If it will, it chops off the bottom bits of the State (by dividing by 2) and pushes those overflow bits directly into the compressed file. 
-                            It repeats this division until the State is small enough. <em>(Reversing this process simply requires reading bits from the file and multiplying 
-                                by 2 to pump the State back up).</em></li>
-                        <li><strong>Bake the Symbol (Grow State):</strong> Now that there is room, the encoder scales the State proportionally to the inverse of the symbol's 
-                            probability using cumulative frequency tables. The math roughly looks like: \(x_{new} \approx \lfloor x / p \rfloor + \text{offset}\). Highly frequent 
-                            symbols make the state grow very slowly, effectively costing fractional bits. <em>(Reversing this requires checking the remainder \(x \pmod M\) to identify the symbol, 
-                                then shrinking the State).</em></li>
+                        <li>
+                            <strong>Renormalize (Extract Bits):</strong> First, the encoder checks if baking the symbol will push the State over the maximum limit.
+                            If it will, it chops off the bottom bits of the State (by dividing by 2) and pushes those overflow bits directly into the compressed file.
+                            It repeats this division until the State is small enough. <em>(Reversing this process simply requires reading bits from the file and multiplying
+                            by 2 to pump the State back up).</em>
+                        </li>
+                        <li>
+                            <strong>Bake the Symbol (Grow State):</strong> Now that there is room, the encoder scales the State proportionally to the inverse of the symbol's
+                            probability using cumulative frequency tables. The math roughly looks like: \(x_{new} \approx \lfloor x / p \rfloor + \text{offset}\). Highly frequent
+                            symbols make the state grow very slowly, effectively costing fractional bits. <em>(Reversing this requires checking the remainder \(x \pmod M\) to identify the symbol,
+                            then shrinking the State).</em>
+                        </li>
                     </ol>
                     <p>
                         This loop—chopping the State down by spitting out bits, then growing it by baking in a symbol—repeats until the entire image is consumed. 
