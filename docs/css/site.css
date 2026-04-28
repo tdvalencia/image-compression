@@ -516,6 +516,26 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     padding: 1.5rem;
 }
 
+/* --- TABLE STYLES --- */
+table {
+    border-collapse: collapse;
+    margin-top: 1rem;
+    max-width: 600px;
+}
+
+th, td {
+    padding: 10px 20px;
+    text-align: left;
+}
+
+th {
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
 /* --- TIMELINE --- */
 .timeline {
     display: flex;
