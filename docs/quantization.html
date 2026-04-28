@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>quantization</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
+
 <body class="site-shell">
 
     <nav>
         <div class="container nav-content">
             <div class="logo"><a href="index.html">Image compression</a></div>
             <div class="nav-links">
-                <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
+                <a href="https://github.com/tdvalencia/image-compression" class="btn"
+                    style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
             </div>
         </div>
     </nav>
@@ -42,29 +45,78 @@
 
             <main>
                 <section class="content-section">
-                    <h2>Frequency-weighted step sizes</h2>
+                    <h2>Frequency-Weighted Step Sizes</h2>
                     <p>
-                        We build an 8×8 <strong>quantization matrix</strong> that grows with spatial frequency (higher indices get larger step sizes). The DC bin is guarded with a smaller step to preserve overall block brightness. In code this lives in <code>build_quantization_matrix</code> in <code>codec/tools.py</code>.
+                        Not all frequency data is important. The human eye is sensitive to large-scale
+                        changes in brightness (low frequencies) but struggles to notice fine, rapid textures (high
+                        frequencies). We exploit this using <strong>Frequency-Weighted Quantization</strong>. We do this
+                        by creating a 8x8 quantization matrix where values closest to the top left (lower frequency
+                        terms) have lower values than values closer to the bottom right (higher frequency terms). After
+                        making the matrix, we perform element wise division on the 8x8 frequency blocks of the original
+                        image. This causes high frequency terms to approach zero (large divisor) and low frequency terms
+                        to decrease only slightly. After performing division, each term is then rounded to the nearest
+                        integer. This is where the actual data loss occurs and it allows the encoder to more effectively compress the truncated
+                        values.
                     </p>
+
+                    <div class="logic-breakdown">
+                        <h3>How the Matrix Works:</h3>
+                        <ul>
+                            <li>
+                                <strong>The DC term:</strong> The top-left value (DC coefficient) represents the
+                                block's average brightness. Our <code>build_quantization_matrix</code> assigns this a
+                                smaller step size to prevent "flickering" or massive color shifts.
+                            </li>
+                            <li>
+                                <strong>Quadratic Growth:</strong> As we move toward the bottom-right, the step sizes
+                                grow quadratically. Large divisors force high-frequency coefficients toward zero, where
+                                they can be efficiently compressed.
+                            </li>
+                            <li>
+                                <strong>The Quality Scaler:</strong> A global multiplier that scales the entire matrix,
+                                allowing us to pivot between "perfect detail" and "maximum space savings."
+                            </li>
+                        </ul>
+                    </div>
+
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: heatmap of your quantization matrix).</p>
+
+                            <img src="assets/quantization-matrix.png"
+                                alt="Heatmap of an 8x8 quantization matrix showing value distribution.">
                         </div>
-                        <figcaption>Figure (optional): quantization matrix visualization.</figcaption>
+                        <figcaption>
+                            <strong>The Quantization Heatmap:</strong> Notice how values "explode" in the
+                            bottom-right. This effectively filters out high-frequency noise that the human eye wouldn't
+                            perceive anyway.
+                        </figcaption>
                     </figure>
+
+                    <p class="code-note">
+                        <small>Implementation Detail: This logic is encapsulated in <code>codec/tools.py</code> under
+                            <code>build_quantization_matrix()</code>.</small>
+                    </p>
                 </section>
 
                 <section class="content-section">
                     <h2>PCA-aware scaling (hybrid pipeline)</h2>
                     <p>
-                        After PCA, the first eigen-channel carries most perceptual energy (similar to luminance). We apply the <strong>base</strong> matrix there. The second and third channels get the same matrix multiplied by a larger factor (e.g. <strong>6×</strong>) so chroma-like components are quantized more coarsely. JPEG’s separate luma and chroma tables follow the same idea, but here the “channels” are PC axes instead of YCbCr.
+                        Beyond frequency, we also scale quantization based on <strong>channel importance</strong>.
+                        After PCA, the first eigen-channel carries the most perceptual energy (similar to luminance). We
+                        apply the <strong>base</strong> matrix there. The second and third channels get the same matrix
+                        multiplied by a larger factor (e.g. <strong>6×</strong>) so chroma-like components are quantized
+                        more coarsely. JPEG’s separate luma and chroma tables follow the same idea, but here the
+                        “channels” are PC axes instead of YCbCr.
                     </p>
                     <p>
-                        Quantized coefficients are rounded to integers; dequantization multiplies by the same matrix (and channel scale) on decode so the encoder and decoder stay matched bit-for-bit aside from loss from rounding.
+                        Quantized coefficients are rounded to integers; dequantization multiplies by the same matrix
+                        (and channel scale) on decode so the encoder and decoder stay matched bit-for-bit aside from
+                        loss from rounding.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: per-channel scaling diagram).</p>
+                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here
+                                (example: per-channel scaling diagram).</p>
                         </div>
                         <figcaption>Figure (optional): PCA-aware scaling across eigen-channels.</figcaption>
                     </figure>
@@ -80,4 +132,5 @@
     </footer>
 
 </body>
+
 </html>
