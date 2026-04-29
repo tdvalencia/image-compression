@@ -67,7 +67,7 @@ COMPRESSION RATIO:
                     </div>
                     <p>
                         The hybrid HF codec is our best all around performer, with an average compression 
-                        ratio of ~100:1. It also was had our best average PSNR compared to JPEG and not a bad SSIM either.
+                        ratio of ~100:1. It also had our best average PSNR compared to JPEG and not a bad SSIM either.
                         However, it still underperforms JPEG on both metrics for each image that was tested. 
                         The main reason for this is our encoder wastes bits on zeros, after quantization,
                         most DCT blocks are filled with zeros, and our Huffman coder still encodes them as symbols.
@@ -92,10 +92,9 @@ COMPRESSION RATIO:
                     <p>
                         The DCT HF codec averages a ~78:1 compression ratio and was the only codec to beat
                         JPEG on a quality metric, it outperformed JPEG on SSIM on <strong>fireworks.ppm</strong>
-                        (0.9364 vs 0.9060). But it still lost to JPEG on every other test image. This ultimately 
-                        comes down to quantization, JPEG's quantization tables have been fine tuned
-                        over decades. Ours is a bit more uniform, so we end up throwing away some of the wrong 
-                        information and losing quality we didn't need to.
+                        (0.9364 vs 0.9060). But it still lost to JPEG on every other test image. This is due to 
+                        quantization, JPEG's quantization tables have been fine tuned over decades. Ours is a bit more 
+                        uniform, so we end up throwing away some of the wrong information and losing quality we didn't need to.
                     </p>
                 </section>
 
@@ -120,10 +119,10 @@ COMPRESSION RATIO:
                         it does with Huffman.
                     </p>
                     <p>
-                        That said, ANS (Asymmetric Numeral Systems) is typically one of the best entropy coders
+                        Still, ANS (Asymmetric Numeral Systems) is typically one of the best entropy coders
                         out there, it's used in modern codecs like Zstandard and AV1. If we had more
                         time, a cleaner ANS implementation combined with better quantization and proper zero handling
-                        could realistically get us past JPEG. It's probably the most promising path for improvement.
+                        could realistically get us past JPEG. It's probably the most favorable course for improvement.
                     </p>
                 </section>
 
