@@ -42,17 +42,17 @@
 
             <main>
 
-                <section class="surface-card">
+                <section class="content-section">
                     <p class="lead">
                         Each codec was tested against JPEG over 14 test images from the RGB 16-bit dataset.
-                        The JPEG's quality is adjusted to match the file size to our codec's output,
-                        making this a direct apples-to-apples rate-distortion comparison.
-                        Metrics testing are PSNR and SSIM — both higher is better. Compression ratios are
+                        JPEG's quality is adjusted per image to match our codec's output file size as closely
+                        as possible, making this a direct apples-to-apples rate-distortion comparison.
+                        Metrics reported are PSNR and SSIM — both higher is better. Compression ratios are
                         calculated against the original uncompressed PPM file sizes.
                     </p>
                 </section>
 
-                <section class="surface-card">
+                <section class="content-section">
                     <h2>Hybrid HF Codec</h2>
                     <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
                         <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
@@ -65,19 +65,20 @@ COMPRESSION RATIO:
   Worst:    70:1  (leaves_iso_1600.ppm)
   Average: ~100:1</pre>
                     </div>
-                   <p>
-    The hybrid HF codec is our best performer in terms of file size, achieving an average compression
-    ratio of around 100:1. However, it trails JPEG on both PSNR and SSIM across the board. The main reason 
-    is that our encoder wastes bits on zeros — after quantization, most DCT blocks are filled with zeros, and our 
-    Huffman coder still encodes them as symbols. JPEG handles this much cleaner by simply stopping when it hits
-    trailing zeros in a block. Fixing this would free up a lot of bits and directly improve quality.
-</p>
+                    <p>
+                        The hybrid HF codec is our best performer in terms of file size, achieving an average
+                        compression ratio of around 100:1. However, it trails JPEG on both PSNR and SSIM across
+                        the board. The main reason is that our encoder wastes bits on zeros — after quantization,
+                        most DCT blocks are filled with zeros, and our Huffman coder still encodes them as symbols.
+                        JPEG handles this much more cleanly by simply stopping when it hits trailing zeros in a block.
+                        Fixing this would free up a lot of bits and directly improve quality.
+                    </p>
                 </section>
 
-                <section class="surface-card">
+                <section class="content-section">
                     <h2>DCT HF Codec</h2>
                     <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
-                       <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
 AVERAGES (Custom / JPEG):
   PSNR: 31.40 dB / 35.24 dB  (89.1% of JPEG)
   SSIM: 0.8181  / 0.8704     (94.0% of JPEG)</pre>
@@ -88,67 +89,167 @@ COMPRESSION RATIO:
   Average:  ~78:1</pre>
                     </div>
                     <p>
-    The DCT HF codec averages around 78:1 compression and was actually the only codec to beat JPEG 
-    on a quality metric — it edged out JPEG on SSIM for <strong>fireworks.ppm</strong> (0.9364 vs 
-    0.9060). But it still falls behind JPEG on PSNR across all 14 images. A big part of this comes down to 
-    quantization — JPEG's quantization tables have been fine-tuned over decades to match how the human eye actually 
-    perceives image quality, being more aggressive with high-frequency details that we don't notice as much. Ours is more 
-    uniform, so we end up throwing away some of the wrong information and losing quality that we didn't need to lose.
-</p>
+                        The DCT HF codec averages around 78:1 compression and was actually the only codec to beat
+                        JPEG on a quality metric — it edged out JPEG on SSIM for <strong>fireworks.ppm</strong>
+                        (0.9364 vs 0.9060). But it still falls behind JPEG on PSNR across all 14 images. A big
+                        part of this comes down to quantization — JPEG's quantization tables have been fine-tuned
+                        over decades to match how the human eye actually perceives image quality, being more
+                        aggressive with high-frequency details that we don't notice as much. Ours is more uniform,
+                        so we end up throwing away some of the wrong information and losing quality we didn't need
+                        to lose.
+                    </p>
                 </section>
 
-               <section class="surface-card">
-    <h2>DCT ANS Codec</h2>
-    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
-       <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
+                <section class="content-section">
+                    <h2>DCT ANS Codec</h2>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
 AVERAGES (Custom / JPEG):
   PSNR: 31.57 dB / 35.62 dB  (88.6% of JPEG)
   SSIM: 0.8249  / 0.8784     (93.9% of JPEG)</pre>
-        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 200px;">
+                        <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 200px;">
 COMPRESSION RATIO:
   Best:     81:1  (fireworks.ppm)
   Worst:    41:1  (big_building.ppm)
   Average:  ~60:1</pre>
-    </div>
-   <p>
-    The DCT ANS codec ended up with the largest file sizes out of the three, averaging around 60:1 compression compared 
-    to ~100:1 for hybrid HF. However, the quality metrics are actually the best of the three codecs on average, 
-    but the file sizes are bigger which hurts the overall comparison. Like the other codecs, a lot of the bloat comes from
-    how we handle zeros after quantization — we're still encoding them when we don't need to, and with ANS that 
-    inefficiency adds up more than it does with Huffman.
-</p>
-   <p>
-    That said, ANS (Asymmetrical Numeral Systems) is genuinely one of the best entropy coders out there — it's used in modern codecs 
-    like Zstandard and AV1 for a reason. If we had more time, a cleaner ANS implementation combined with better quantization and proper 
-    zero handling could realistically get us past JPEG. It's probably the most promising direction for 
-    improvement.
-</p>
-
+                    </div>
+                    <p>
+                        The DCT ANS codec ended up with the largest file sizes of the three, averaging around 60:1
+                        compression compared to ~100:1 for hybrid HF. However, the quality metrics are actually the
+                        best of the three codecs on average. Like the other codecs, a lot of the bloat comes from
+                        how we handle zeros after quantization — we're still encoding them when we don't need to,
+                        and with ANS that inefficiency adds up more than it does with Huffman.
+                    </p>
+                    <p>
+                        That said, ANS (Asymmetric Numeral Systems) is genuinely one of the best entropy coders
+                        out there — it's used in modern codecs like Zstandard and AV1 for a reason. If we had more
+                        time, a cleaner ANS implementation combined with better quantization and proper zero handling
+                        could realistically get us past JPEG. It's probably the most promising direction for
+                        improvement.
+                    </p>
                 </section>
 
-                <section class="surface-card">
+                <section class="content-section">
                     <h2>Where We Fall Short and What Could Fix It</h2>
                     <p>
                         Three consistent weaknesses explain why all our codecs trail JPEG on quality metrics:
                     </p>
                     <ul>
-           <li>
-    <strong>Encoding zeros wastes bits.</strong> After quantization, most of a DCT block ends up 
-    as zeros, especially in the high-frequency corners. Instead of skipping them, our encoder 
-    codes them as symbols anyway, which bloats the file. JPEG just stops when it hits trailing 
-    zeros in a block, which saves a lot of space. Adding something like that to 
-    our pipeline would be a pretty solid improvement
-</li>
-
-<li>
-    <strong>The arithmetic coder has a precision bug.</strong> Our DCT AE codec crashes on every 
-    image we tested. The issue is that when there are a lot of unique symbols, the probabilities 
-    get so small that the floating point math breaks down. It never actually produces results, 
-    which is a shame because arithmetic coding is theoretically more efficient than Huffman. 
-    Getting this working properly would be a big step forward and might be what it takes to 
-    actually beat JPEG.
-</li>
+                        <li>
+                            <strong>Encoding zeros wastes bits.</strong> After quantization, most of a DCT block
+                            ends up as zeros, especially in the high-frequency corners. Instead of skipping them,
+                            our encoder codes them as symbols anyway, which bloats the file. JPEG just stops when
+                            it hits trailing zeros in a block, which saves a lot of space. Adding something like
+                            that to our pipeline would be a solid improvement.
+                        </li>
+                        <li>
+                            <strong>Our quantization matrix is too simple.</strong> JPEG's quantization tables
+                            are tuned to how humans actually see images — we're less sensitive to high-frequency
+                            detail, so JPEG throws more of that away. Ours is more of a blanket approach, so we
+                            end up keeping things we didn't need and losing things we did. Better quantization
+                            tables would improve quality without touching anything else.
+                        </li>
+                        <li>
+                            <strong>The arithmetic coder has a precision bug.</strong> Our DCT AE codec crashes
+                            on every image we tested. The issue is that when there are a lot of unique symbols,
+                            the probabilities get so small that the floating point math breaks down. It never
+                            actually produces results, which is a shame because arithmetic coding is theoretically
+                            more efficient than Huffman. Getting this working properly would be a big step forward
+                            and might be what it takes to actually beat JPEG.
+                        </li>
                     </ul>
+                </section>
+
+                <section class="content-section">
+                    <h2>Appendix — Raw Benchmark Output</h2>
+                    <p>Full test suite output for each codec across all 14 images.</p>
+
+                    <h3>Hybrid HF Codec</h3>
+                    <pre style="overflow-x: auto; font-size: 0.75rem; line-height: 1.5;">
+--- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
+Target Directory: images/rgb16bit/
+Total Images: 14
+
+Image Name         | Size KB (Cust / JPEG)  | PSNR (Cust / JPEG) | SSIM (Cust / JPEG) | JPEG(Q)
+-----------------------------------------------------------------------------------------------
+leaves_iso_1600.pp | 515.1 / 517.5          | 25.88 / 28.85      | 0.6736 / 0.7805    | Q=27
+leaves_iso_200.ppm | 505.7 / 508.2          | 26.57 / 30.31      | 0.7490 / 0.8567    | Q=28
+big_building.ppm   | 2768.7 / 2789.1        | 29.21 / 33.04      | 0.7817 / 0.8898    | Q=36
+flower_foveon.ppm  | 194.2 / 195.0          | 35.53 / 41.70      | 0.9178 / 0.9636    | Q=81
+cathedral.ppm      | 381.4 / 382.1          | 31.19 / 33.71      | 0.7490 / 0.8257    | Q=43
+nightshot_iso_1600 | 421.6 / 426.0          | 29.64 / 30.60      | 0.6155 / 0.6798    | Q=39
+nightshot_iso_100. | 411.7 / 408.9          | 33.50 / 38.79      | 0.9039 / 0.9439    | Q=70
+bridge.ppm         | 765.1 / 755.8          | 29.04 / 30.61      | 0.6592 / 0.7375    | Q=34
+hdr.ppm            | 344.4 / 349.5          | 35.72 / 40.84      | 0.9173 / 0.9629    | Q=74
+artificial.ppm     | 365.2 / 367.6          | 31.13 / 36.67      | 0.8722 / 0.9481    | Q=65
+big_tree.ppm       | 1750.0 / 1764.8        | 28.22 / 29.80      | 0.6550 / 0.7240    | Q=41
+deer.ppm           | 506.7 / 511.6          | 29.13 / 29.30      | 0.5259 / 0.5491    | Q=39
+spider_web.ppm     | 658.6 / 668.4          | 39.19 / 43.58      | 0.9500 / 0.9746    | Q=78
+fireworks.ppm      | 324.3 / 323.8          | 32.48 / 38.85      | 0.8720 / 0.8980    | Q=64
+-----------------------------------------------------------------------------------------------
+FINAL TALLY:
+  SSIM Wins -> Custom: 0  | JPEG: 14
+  PSNR Wins -> Custom: 0  | JPEG: 14
+ 
+                    </pre>
+
+                    <h3>DCT HF Codec</h3>
+                    <pre style="overflow-x: auto; font-size: 0.75rem; line-height: 1.5;">
+--- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
+Target Directory: images/rgb16bit/
+Total Images: 14
+
+Image Name         | Size KB (Cust / JPEG)  | PSNR (Cust / JPEG) | SSIM (Cust / JPEG) | JPEG(Q)
+-----------------------------------------------------------------------------------------------
+leaves_iso_1600.pp | 778.4 / 785.2          | 25.57 / 30.32      | 0.6731 / 0.8254    | Q=52
+leaves_iso_200.ppm | 758.3 / 753.5          | 26.18 / 32.21      | 0.7440 / 0.8979    | Q=55
+big_building.ppm   | 4028.5 / 4037.4        | 28.64 / 34.52      | 0.7602 / 0.9127    | Q=63
+flower_foveon.ppm  | 236.8 / 229.8          | 38.89 / 42.28      | 0.9491 / 0.9663    | Q=85
+cathedral.ppm      | 520.5 / 518.0          | 31.00 / 34.51      | 0.7468 / 0.8469    | Q=62
+nightshot_iso_1600 | 590.7 / 595.9          | 30.27 / 31.19      | 0.6499 / 0.7123    | Q=56
+nightshot_iso_100. | 523.5 / 519.1          | 34.14 / 39.77      | 0.9212 / 0.9513    | Q=80
+bridge.ppm         | 1110.9 / 1102.3        | 29.07 / 31.41      | 0.6647 / 0.7711    | Q=55
+hdr.ppm            | 448.5 / 455.7          | 36.69 / 41.72      | 0.9229 / 0.9674    | Q=83
+artificial.ppm     | 455.1 / 452.7          | 31.61 / 37.86      | 0.9131 / 0.9576    | Q=77
+big_tree.ppm       | 2659.0 / 2668.7        | 29.03 / 30.57      | 0.6913 / 0.7563    | Q=64
+deer.ppm           | 669.5 / 672.2          | 29.30 / 29.38      | 0.5345 / 0.5579    | Q=49
+spider_web.ppm     | 853.8 / 863.5          | 39.47 / 44.27      | 0.9470 / 0.9772    | Q=84
+fireworks.ppm      | 358.6 / 357.5          | 31.71 / 39.33      | 0.9364 / 0.9060    | Q=70
+-----------------------------------------------------------------------------------------------
+FINAL TALLY:
+  SSIM Wins -> Custom: 1  | JPEG: 13
+  PSNR Wins -> Custom: 0  | JPEG: 14
+
+                    </pre>
+
+                    <h3>DCT ANS Codec</h3>
+                    <pre style="overflow-x: auto; font-size: 0.75rem; line-height: 1.5;">
+--- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
+Target Directory: images/rgb16bit/
+Total Images: 14
+
+Image Name         | Size KB (Cust / JPEG)  | PSNR (Cust / JPEG) | SSIM (Cust / JPEG) | JPEG(Q)
+-----------------------------------------------------------------------------------------------
+leaves_iso_1600.pp | 1041.8 / 1045.9        | 25.57 / 31.24      | 0.6731 / 0.8495    | Q=70
+leaves_iso_200.ppm | 1015.4 / 1004.2        | 26.18 / 33.48      | 0.7440 / 0.9188    | Q=73
+big_building.ppm   | 5552.2 / 5538.4        | 28.64 / 35.62      | 0.7602 / 0.9262    | Q=78
+flower_foveon.ppm  | 344.1 / 337.9          | 38.89 / 43.39      | 0.9491 / 0.9717    | Q=91
+cathedral.ppm      | 727.9 / 740.8          | 31.00 / 35.43      | 0.7468 / 0.8695    | Q=77
+nightshot_iso_1600 | 845.5 / 849.8          | 30.27 / 31.84      | 0.6499 / 0.7456    | Q=72
+nightshot_iso_100. | 763.6 / 774.9          | 34.14 / 41.09      | 0.9212 / 0.9590    | Q=89
+bridge.ppm         | 1535.1 / 1531.8        | 29.07 / 32.08      | 0.6647 / 0.7962    | Q=72
+hdr.ppm            | 658.6 / 675.6          | 36.69 / 42.91      | 0.9229 / 0.9724    | Q=91
+artificial.ppm     | 650.5 / 648.8          | 31.61 / 39.97      | 0.9131 / 0.9699    | Q=89
+big_tree.ppm       | 3670.9 / 3721.4        | 29.03 / 31.23      | 0.6913 / 0.7822    | Q=77
+deer.ppm           | 1026.3 / 1008.7        | 29.30 / 29.52      | 0.5345 / 0.5735    | Q=67
+spider_web.ppm     | 1259.0 / 1229.5        | 39.47 / 45.28      | 0.9470 / 0.9804    | Q=90
+fireworks.ppm      | 543.1 / 533.8          | 31.71 / 41.23      | 0.9364 / 0.9583    | Q=85
+-----------------------------------------------------------------------------------------------
+FINAL TALLY:
+  SSIM Wins -> Custom: 0 | JPEG: 14
+  PSNR Wins -> Custom: 0 | JPEG: 14
+  
+                    </pre>
                 </section>
 
             </main>
