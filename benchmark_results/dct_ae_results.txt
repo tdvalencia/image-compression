@@ -1,0 +1,25 @@
+--- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
+Target Directory: images/rgb16bit/
+Total Images: 14
+
+Image Name         | Size KB (Cust / JPEG)  | PSNR (Cust / JPEG) | SSIM (Cust / JPEG) | JPEG(Q)
+-----------------------------------------------------------------------------------------------
+leaves_iso_1600.pp | ERROR: Low or high out of range
+leaves_iso_200.ppm | ERROR: Low or high out of range
+big_building.ppm   | ERROR: Low or high out of range
+flower_foveon.ppm  | ERROR: Low or high out of range
+cathedral.ppm      | ERROR: Low or high out of range
+nightshot_iso_1600 | ERROR: Low or high out of range
+nightshot_iso_100. | ERROR: Low or high out of range
+bridge.ppm         | ERROR: Low or high out of range
+hdr.ppm            | ERROR: Low or high out of range
+artificial.ppm     | ERROR: Low or high out of range
+big_tree.ppm       | ERROR: Low or high out of range
+deer.ppm           | ERROR: Low or high out of range
+spider_web.ppm     | ERROR: Low or high out of range
+fireworks.ppm      | ERROR: Low or high out of range
+-----------------------------------------------------------------------------------------------
+FINAL TALLY:
+  SSIM Wins -> Custom: 0 | JPEG: 0
+  PSNR Wins -> Custom: 0 | JPEG: 0
+  Size Wins -> Custom: 0 | JPEG: 0

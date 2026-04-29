@@ -29,9 +29,8 @@
                 <a href="quantization.html">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
-                <a href="reflection.html">reflection</a>
+                <a href="results.html">results</a>
                 <a href="references.html">references</a>
-                <a href="team.html">team</a>
             </nav>
         </aside>
 
@@ -50,23 +49,24 @@
                     <p>
                         In code, the hybrid pipeline applies <code>dctn</code> on the blocked tensor (spatial axes of each block). The inverse path uses the matching <code>idctn</code> with the same normalization so round-trip is consistent.
                     </p>
-                    <figure class="doc-figure-slot">
+                   <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: 8×8 basis tiles or pipeline snippet).</p>
+                            <img src="assets/dct-pipeline.png" alt="Simplified DCT compression pipeline" class="plot-image">
                         </div>
-                        <figcaption>Figure (optional): DCT block or basis illustration.</figcaption>
+                        <figcaption>
+                            DCT pipeline: the image is transformed to the frequency domain, reduced via quantization, and encoded into a compressed file.
+                        </figcaption>
                     </figure>
                 </section>
 
                 <section class="content-section">
-                    <h2>Zig-zag &amp; DC / AC split</h2>
-                    <p>
-                        For entropy coding we reorder each quantized block into a zig-zag scan: the <strong>DC</strong> term (average intensity of the block) is handled separately from <strong>AC</strong> coefficients. AC values are run-length encoded on zeros; the DC sequence is highly correlated block-to-block, so we run <a href="dpcm.html">DPCM</a> on the DCs before entropy coding.
-                    </p>
+                    <h2>Why DCT Works</h2>
+                        <p> 
+                            Natural images vary smoothly, meaning most energy is concentrated in low-frequency components. The DCT transforms pixel values into frequency coefficients, concentrating this energy in the top-left of each block. This allows us to retain a small number of coefficients while discarding less important high-frequency information, reducing file size with minimal visual loss.
+                        </p>
                 </section>
-
                 <section class="content-section">
-                    <h2>Figures</h2>
+                    <h2>Quality versus number of kept coefficients</h2>
                     <p>Same DCT-focused figures that appear in the <a href="progress.html#figures">progress report</a>, shown here for the technique page.</p>
                     <div class="plot-grid">
                         <div class="plot-card">
@@ -77,32 +77,73 @@
                             </div>
                         </div>
                         <div class="plot-card">
-                            <img src="assets/deer-8x8-block-coeffs.png" alt="DCT blocks visualization" class="plot-image">
-                            <div class="plot-details">
-                                <h3>8×8 DCT blocks</h3>
-                                <p>Frequency-domain view per block.</p>
-                            </div>
-                        </div>
-                        <div class="plot-card">
                             <img src="assets/deer-1-coeffs.png" alt="Single coefficient reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>Severe truncation</h3>
+                                <h3>Keep 1 coefficient</h3>
                                 <p>Keeping only one coefficient illustrates how much energy lives in the DC and lowest AC terms.</p>
                             </div>
                         </div>
                         <div class="plot-card">
                             <img src="assets/deer-3-coeffs.png" alt="Three coefficients reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>Three coefficients</h3>
+                                <h3>Keep 3 coefficients</h3>
                                 <p>Stepping up retention slightly restores more edge structure for a modest bit cost.</p>
                             </div>
                         </div>
                     </div>
                 </section>
+
+                <section class="content-section">
+                    <h2>Observed Results</h2>
+                
+                        <p>
+                            The DCT results clearly demonstrate how image energy is concentrated in low-frequency components. When transformed into the frequency domain, most important visual information is contained in only a few coefficients. The original image was approximately 1.2 MB, while the compressed version using aggressive coefficient reduction was under 200 KB, demonstrating a compression ratio greater than 5×.
+                        </p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Quality</th>
+                                <th>Compression</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 coefficient</td>
+                                <td>Low</td>
+                                <td>~6–8×</td>
+                            </tr>
+                            <tr>
+                                <td>3 coefficients</td>
+                                <td>Moderate</td>
+                                <td>~4–6×</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                        <p>
+                            When keeping only <strong>one coefficient per 8×8 block (DC component)</strong>, the image is heavily compressed. The reconstructed image retains overall brightness and structure but loses nearly all fine detail. This corresponds to a very high compression ratio of approximately <strong>6–8×</strong>, but with noticeable visual degradation.
+                        </p>
+                    
+                        <p>
+                            When increasing to <strong>three coefficients per block</strong>, additional low frequency information is preserved. This significantly improves image quality, restoring edges and textures while still maintaining strong compression. The compression ratio in this case is approximately <strong>4–6×</strong>, demonstrating a better balance between size and quality.
+                        </p>
+                            <ul>
+                                <li><strong>1 coefficient:</strong> Low PSNR (visibly degraded image)</li>
+                                <li><strong>3 coefficients:</strong> Higher PSNR (improved structure and clarity)</li>
+                            </ul>
+                    
+                        <p>
+                            The DCT coefficients confirm this behavior. Most of the energy is concentrated in the upper-left (low-frequency) region, while high-frequency components are sparse. This sparsity enables effective compression through quantization and entropy coding.
+                        </p>
+                        <p>
+                            <strong>Summary:</strong> Increasing the number of the retained DCT coefficients improves image quality at the cost of increasing file size, emphasizing the tradeoff between compression efficiency and visual quality.
+                        </p>
+                </section>
             </main>
         </div>
     </div>
-
+    
+    
     <footer>
         <div class="container">
             <p>© 2026 image compression · EECS 351 · University of Michigan</p>

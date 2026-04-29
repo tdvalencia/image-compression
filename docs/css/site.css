@@ -365,6 +365,52 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     max-width: 800px;
 }
 
+.content-section mjx-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.content-section ul,
+.content-section ol {
+    color: var(--text-muted);
+    max-width: 800px;
+    margin: 0 0 1rem;
+}
+
+.content-section ul {
+    padding-left: 1.35rem;
+}
+
+.content-section ol {
+    padding-left: 1.75rem;
+    list-style-position: outside;
+}
+
+.content-section li {
+    margin-bottom: 0.5rem;
+    padding-left: 0.35rem;
+}
+
+.content-section li:last-child {
+    margin-bottom: 0;
+}
+
+.content-section .reference-list {
+    list-style: none;
+    max-width: 640px;
+    margin: 0 0 1rem;
+    padding-left: 0;
+}
+
+.content-section .reference-list li {
+    margin-bottom: 1rem;
+    padding-left: 0;
+}
+
+.content-section .reference-list li:last-child {
+    margin-bottom: 0;
+}
+
 .content-section a {
     color: var(--primary-color);
 }
@@ -470,6 +516,26 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     padding: 1.5rem;
 }
 
+/* --- TABLE STYLES --- */
+table {
+    border-collapse: collapse;
+    margin-top: 1rem;
+    max-width: 600px;
+}
+
+th, td {
+    padding: 10px 20px;
+    text-align: left;
+}
+
+th {
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
 /* --- TIMELINE --- */
 .timeline {
     display: flex;

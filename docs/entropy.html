@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>entropy encodings</title>
     <link rel="stylesheet" href="css/site.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body class="site-shell">
 
@@ -29,46 +38,237 @@
                 <a href="quantization.html">quantization</a>
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html" class="is-active">entropy encoders</a>
-                <a href="reflection.html">reflection</a>
+                <a href="results.html">results</a>
                 <a href="references.html">references</a>
-                <a href="team.html">team</a>
             </nav>
         </aside>
 
         <div class="main-column">
             <header class="hero hero--compact">
                 <h1>Entropy encoders</h1>
-                <p>Turning quantized symbols and run-length tuples into compact bitstreams.</p>
+                <p>
+                    With the quantized symbols, there is still a lot of redundancy in the data.
+                    Entropy encoders further reduce the size of data by assigning short patterns to
+                    long strings of repeated symbols.
+                </p>
             </header>
 
             <main>
                 <section class="content-section">
-                    <h2>Huffman (canonical backend)</h2>
+                    <h2>Goal</h2>
                     <p>
-                        Our Huffman path builds a frequency table over the <em>exact</em> symbols we will encode (DPCM deltas for DC, RLE tuples for AC), trains a codec from those counts, and writes raw compressed bytes. The hybrid pipeline stores <strong>separate</strong> DC and AC streams plus their symbol count tables in the file container so the decoder can reconstruct both Huffman trees.
+                        When we get our quantized symbols, we can use entropy encoders to further reduce the size of the data.
+                        Entropy encoders work by assigning short patterns to long strings of repeated symbols in our image data.
+                        This is the last compression stage: it should be lossless with respect to the quantized symbols.
+                    </p>
+                    <p>
+                        To further explain entropy encoders, we must first define what entropy is.
+                        Entropy is a measure of the unpredictability of a source of information.
+                        The more predictable the source of information, the lower the entropy.
+                        The more unpredictable the source of information, the higher the entropy.
+                        Entropy encoders attempt to reach the lower bound of UMich Alum Claude Shannon's
+                        <strong>sourcing code theorem</strong>, which states that you cannot compress data into fewer bits than its entropy
+                        without permanently losing information. Shannon's theorem is given by the equation:
+                        \[
+                            L \geq H(X)
+                        \]
+                        where \(L\) is the average codeword length of a compressed symbol and \(H(X)\) is the entropy of the source of information.
+                        The entropy of the source of information \(H(X)\) is given by the equation:
+                        \[
+                            H(X) = -\sum_{x \in X} p(x) \log_2 p(x)
+                        \]
+                        where \(X\) is the source of information and \(p(x)\) is the probability of the symbol \(x\) occurring.
+                    </p>
+                    <p>
+                        In this project, we experimented with Huffman encoding, arithmetic encoding, ANS encoding, and run-length encoding.
+                        We found through experimentation that Huffman encoding was the most efficient and reliable entropy encoder for our image data.
+                        Our final hybrid SVD-DCT pipeline, thus, uses Huffman encoding for our image data. These following sections here focus on 
+                        how to encode but to decode, you reverse the process of encoding.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Run Length Encoding</h2>
+                    <p>
+                        Run length encoding (RLE) is a simple entropy encoder that replaces repeated runs of symbols with a single symbol and a count.
+                        A run is a sequence of consecutive symbols that are the same. Given a list of symbols like "green green green red red red red", 
+                        the RLE encoding would be: <code>(green, 3), (red, 3)</code>. Historically, it has been used since 1967 for analog television.
+                    </p>
+                    <p>
+                        In our project, RLE is used to compress runs of data before they are fed to a more complex entropy encoder. We implemented
+                        it using our own Python implementation becuase it was easy to implement ourselves.
                     </p>
                     <figure class="doc-figure-slot">
                         <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: DC vs AC stream diagram or histogram).</p>
+                            <img src="assets/RLE Example.png" alt="Basic Run Length Encoding example">
                         </div>
-                        <figcaption>Figure (optional): Huffman / dual-stream layout.</figcaption>
+                        <figcaption>Figure X: This is a basic run length encoding example.</figcaption>
+                    </figure>
+                </section>
+                
+                <section class="content-section">
+                    <h2>Huffman Encoding</h2>
+                    <p>
+                        Huffman encoding is a variable-length encoding scheme that assigns shorter bit patterns to more frequent symbols and 
+                        longer patterns to rare symbols. This is achieved by building a Huffman tree from the symbol frequencies. The Huffman
+                        tree is a binary tree where each leaf node is a symbol and each edge is a bit. 
+                    </p>
+                    <h3>Building the Tree</h3>
+                    <p>
+                        The tree is built using the symbols and their frequencies. 
+                        The symbols with the minimum frequencies are create a new node in the tree that is the sum of the two minimum frequency symbols. 
+                        This process is repeated until all symbols are in the tree. The root of the tree is the symbol with the highest frequency.
+                        Bits are assigned based on the path from the root to the leaf node. The left edge is 0 and the right edge is 1.
+                    </p>
+                    <p>
+                        Looking at the Huffman encoding of the symbols <code>"AABCCCCDD"</code>, we can see that the the symbols and frequencies are:
+                        <code>A: 2, B: 1, C: 4, D: 2</code>. To build the tree:
+                    </p>
+                    <ol>
+                        <li>Merge <code>B(1)</code> and <code>A(2)</code> to form <code>BA</code> with frequency 3.</li>
+                        <li>Merge <code>D(2)</code> and <code>BA(3)</code> to form <code>DB</code> with frequency 5.</li>
+                        <li>Merge <code>C(4)</code> and <code>DB(5)</code> to form <code>CDBA</code> with frequency 9.</li>
+                    </ol>
+                    <p>
+                        Traversing the tree from the root to the leaf nodes where 0 is the left edge and 1 is the right edge, 
+                        we get the following encodings:
+                    </p>
+                    <ul>
+                        <li><code>C: 0</code></li>
+                        <li><code>D: 10</code></li>
+                        <li><code>B: 110</code></li>
+                        <li><code>A: 111</code></li>
+                    </ul>
+                    <p>
+                        The Huffman encoding of the symbols <code>"AABCCCCDD"</code> would be: <code>11111111000001010</code>.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <img src="assets/Huffman Tree.png"
+                                alt="Basic Huffman Encoding example"
+                                style="max-width: 520px; width: 100%; height: auto;">
+                        </div>
+                        <figcaption>Figure X: This is a basic Huffman encoding example.</figcaption>
+                    </figure>
+                    <h3>Ol' Reliable</h3>
+                    <p>
+                        In our project, we found Huffman encoding to be the best at compressing our image data reliably. So when we made our final
+                        hybrid SVD-DCT pipeline, we decided to use Huffman encoding for our image data. For our implementation, we used the
+                        <code>dahuffman</code> Python library as our Huffman encoder. The library would take in a dictionary of symbols and their frequencies 
+                        and return the raw bytes of the compressed data. We would have to save the dictionary of symbols and their frequencies in the metadata
+                        of our compressed image object.
+                    </p>
+                    <p>
+                        Something surprising was that the ANS encoding was not as effective as the Huffman encoding. What we suspect the problem with ANS
+                        encodng was the metadata overhead needed to store components of the ANS state. We used a library <code>simple_ans</code> to implement ANS encoding.
+                        The library would take in a dictionary of symbols but would return an <code>EncodedSignal</code> object. That may have been big compared to
+                        just raw bytes of the compressed data from the Huffman encoder.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Arithmetic Encoding</h2>
+                    <p>
+                        Aithmetic encoding is another entropy encoding method that stores entire messages as a single floating point number in the range [0, 1.0).
+                        The message is encoded by dividing the range [0, 1.0) into sub-ranges for each symbol in the message. The sub-ranges are determined by the 
+                        probability of the symbol. So a symbol with a higher probability will have a larger sub-range. The sub-ranges are then used to encode a message.
+                    </p>
+                    <h3>Encoding a Message</h3>
+                    <p>
+                        To encode a message, with the sub-ranges determined, an encoder would take the first symbol of the message and find the corresponding sub-range.
+                        The encoder would then update the range to the corresponding sub-range. This process is repeated for each symbol in the message. The final range
+                        is the encoded message.
+                    </p>
+                    <p>
+                        Take for example the message <code>"ABC"</code> with the frequencies <code>A: 1, B: 1, C: 1</code>. The sub-ranges would be:
+                    </p>
+                    <ul>
+                        <li><code>A: [0, 0.33)</code></li>
+                        <li><code>B: [0.33, 0.66)</code></li>
+                        <li><code>C: [0.66, 0.99)</code></li>
+                    </ul>
+                    <p>
+                        For the first symbol <code>"A"</code>, the sub-range is <code>[0, 0.33)</code>. The encoder would then update the range to <code>[0, 0.33)</code>.
+                        The same probability distribution would be used for the range <code>[0, 0.33)</code> for the next symbol <code>B</code>. The sub-range is <code>[0, 0.1089)</code>.
+                        This continutes until the last symbol <code>C</code> is reached. The final range of the encoded message would be <code>[5/27, 2/9) ~ [0.185, 0.222)</code>
+                    </p>
+                    <h3>Floating Point Precision Issues</h3>
+                    <p>
+                        For really long messages (like image data), the encoder runs into precisions issues with floating point numbers. So the encoder was not the best choice for our
+                        compression pipelines and we decided to not use it beyond a single dct pipeline.
+                    </p>
+                    <figure class="doc-figure-slot">
+                        <div class="doc-figure-slot__media">
+                            <img src="assets/arithmetic encoding.png"
+                                alt="ABC Arithmetic Encoding example"
+                                style="max-width: 520px; width: 100%; height: auto;">
+                        </div>
+                        <figcaption>Figure X: "ABC" Arithmetic Encoding example.</figcaption>
                     </figure>
                 </section>
 
                 <section class="content-section">
-                    <h2>ANS &amp; arithmetic variants</h2>
+                    <h2>Asymmetric Numeral Systems (ANS)</h2>
                     <p>
-                        Additional pipelines experiment with <strong>asymmetric numeral systems (ANS)</strong> and <strong>static arithmetic coding</strong> on the same RLE tuple vocabulary. ANS flattens tuples to a symbol stream and packs state plus code words into a custom blob; arithmetic coding maps stringified <code>value_count</code> symbols through a scaled static model.
+                        Asymmetric Numeral Systems (ANS), invented by Jarek Duda in 2006, is a modern entropy coding technique that bridges the gap between Huffman coding and Arithmetic coding. 
+                        It achieves the exact mathematical efficiency of Arithmetic coding (fractional bits) but operates with the sheer speed of Huffman coding.
+                    </p>
+                
+                    <h3>The LIFO State Machine</h3>
+                    <p>
+                        Unlike Huffman, which converts symbols directly into bits using a dictionary, ANS operates on a single, continuously updating natural number called the <strong>State (\(x\))</strong>. 
+                        Symbols are mathematically "baked" into this integer. 
                     </p>
                     <p>
-                        Encoder-specific packing lives in the pipeline scripts; the on-disk container only holds <code>metadata</code> and named <code>bitstreams</code> blobs so each backend stays swappable.
+                        Crucially, this mathematical baking process operates as a <strong>Last-In, First-Out (LIFO) stack</strong>. Because the mathematical operations are perfectly symmetrical, 
+                        whatever symbol is baked into the State <em>last</em> will inherently be the first symbol extracted if you run the exact same math in reverse.
                     </p>
-                    <figure class="doc-figure-slot">
-                        <div class="doc-figure-slot__media">
-                            <p class="doc-figure-slot__hint">Add <code>&lt;img src="assets/…" alt="…"&gt;</code> here (example: ANS state diagram or rate comparison plot).</p>
-                        </div>
-                        <figcaption>Figure (optional): ANS or arithmetic coding experiment.</figcaption>
-                    </figure>
+                
+                    <h3>The Encoding Loop</h3>
+                    <p>
+                        The encoder starts with a baseline State integer and a predefined safe operating range (e.g., between 16 and 31). When a new symbol arrives, the encoder must bake it into 
+                        the State while keeping the integer from overflowing. This requires two perfectly reversible steps:
+                    </p>
+                    <ol>
+                        <li>
+                            <strong>Renormalize (Extract Bits):</strong> First, the encoder checks if baking the symbol will push the State over the maximum limit.
+                            If it will, it chops off the bottom bits of the State (by dividing by 2) and pushes those overflow bits directly into the compressed file.
+                            It repeats this division until the State is small enough. <em>(Reversing this process simply requires reading bits from the file and multiplying
+                            by 2 to pump the State back up).</em>
+                        </li>
+                        <li>
+                            <strong>Bake the Symbol (Grow State):</strong> Now that there is room, the encoder scales the State proportionally to the inverse of the symbol's
+                            probability using cumulative frequency tables. The math roughly looks like: \(x_{new} \approx \lfloor x / p \rfloor + \text{offset}\). Highly frequent
+                            symbols make the state grow very slowly, effectively costing fractional bits. <em>(Reversing this requires checking the remainder \(x \pmod M\) to identify the symbol,
+                            then shrinking the State).</em>
+                        </li>
+                    </ol>
+                    <p>
+                        This loop—chopping the State down by spitting out bits, then growing it by baking in a symbol—repeats until the entire image is consumed. 
+                        The "compressed file" is simply the collection of bits that fell off during renormalization, plus the final State integer saved in the header.
+                    </p>
+                
+                    <h3>Our Implementation & "Probability Fracturing"</h3>
+                    <p>
+                        We built an experimental pipeline using the <code>simple_ans</code> Python library to encode our quantized DCT coefficients. 
+                        Mathematically, the fractional bits of ANS should have easily beaten our Huffman encoder's compression ratio. However, in practice, our 
+                        final file sizes were substantially worse. 
+                    </p>
+                    <p>
+                        We discovered a critical engineering trade-off: <strong>metadata overhead</strong>. Because our 16-bit DCT quantization created a massive, 
+                        fractured alphabet (thousands of unique symbols with erratic probabilities), the ANS state machine required an incredibly precise probability 
+                        table to initialize. The sheer byte-size required to store this fractured dictionary inside the header of our <code>.uofm</code> container completely erased the fractional-bit savings generated by the algorithm. Because of this architectural overhead, we selected Huffman coding as the robust champion for our final Hybrid pipeline.
+                    </p>
+                </section>
+                
+
+                <section class="content-section">
+                    <h2>Hand-off</h2>
+                    <p>
+                        Once we are done with the entropy encoding of our signals, we package the data into a <code>.uofm</code> container. 
+                        The container stores the raw bytes of the compressed data and the metadata needed to decode the data. From here we
+                        compute metrics like compression ratio, PSNR, and SSIM to evaluate the performance of our compression pipeline.
+                    </p>
                 </section>
             </main>
         </div>
