@@ -60,19 +60,13 @@
                 </section>
 
                 <section class="content-section">
-                    <h2>Zig-zag &amp; DC / AC split</h2>
-                    <p>
-                        For entropy coding we reorder each quantized block into a zig-zag scan: the <strong>DC</strong> term (average intensity of the block) is handled separately from <strong>AC</strong> coefficients. AC values are run-length encoded on zeros; the DC sequence is highly correlated block-to-block, so we run <a href="dpcm.html">DPCM</a> on the DCs before entropy coding.
-                    </p>
-                </section>
-                <section class="content-section">
                     <h2>Why DCT Works</h2>
                         <p> 
                             Natural images vary smoothly, meaning most energy is concentrated in low-frequency components. The DCT transforms pixel values into frequency coefficients, concentrating this energy in the top-left of each block. This allows us to retain a small number of coefficients while discarding less important high-frequency information, reducing file size with minimal visual loss.
                         </p>
                 </section>
                 <section class="content-section">
-                    <h2>Figures</h2>
+                    <h2>Quality versus number of kept coefficients</h2>
                     <p>Same DCT-focused figures that appear in the <a href="progress.html#figures">progress report</a>, shown here for the technique page.</p>
                     <div class="plot-grid">
                         <div class="plot-card">
@@ -83,23 +77,16 @@
                             </div>
                         </div>
                         <div class="plot-card">
-                            <img src="assets/deer-8x8-block-coeffs.png" alt="DCT blocks visualization" class="plot-image">
-                            <div class="plot-details">
-                                <h3>8×8 DCT blocks</h3>
-                                <p>Frequency-domain view per block.</p>
-                            </div>
-                        </div>
-                        <div class="plot-card">
                             <img src="assets/deer-1-coeffs.png" alt="Single coefficient reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>DC only (1 coefficient)</h3>
+                                <h3>Keep 1 coefficient</h3>
                                 <p>Keeping only one coefficient illustrates how much energy lives in the DC and lowest AC terms.</p>
                             </div>
                         </div>
                         <div class="plot-card">
                             <img src="assets/deer-3-coeffs.png" alt="Three coefficients reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>Low-frequency reconstruction (3 coefficients)</h3>
+                                <h3>Keep 3 coefficients</h3>
                                 <p>Stepping up retention slightly restores more edge structure for a modest bit cost.</p>
                             </div>
                         </div>
