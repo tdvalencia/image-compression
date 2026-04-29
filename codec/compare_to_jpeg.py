@@ -14,10 +14,10 @@ from skimage.metrics import structural_similarity as ssim_metric
 import codec.tools as ct
 
 # Swap codec by changing the import (same ``compress_image`` / ``reconstruct_image`` API):
-#import codec.pipelines.hybrid_hf_codec as custom_codec
-#import codec.pipelines.dct_hf_codec as custom_codec
-#import codec.pipelines.dct_ans_codec as custom_codec
-import codec.pipelines.dct_ae_codec as custom_codec
+import codec.pipelines.hybrid_hf_codec as custom_codec
+# import codec.pipelines.dct_hf_codec as custom_codec
+# import codec.pipelines.dct_ans_codec as custom_codec
+# import codec.pipelines.dct_ae_codec as custom_codec
 
 IMAGE_DIR = 'images/rgb16bit/'
 TEMP_OUT = 'temp_batch_custom.uofm'
