@@ -66,8 +66,9 @@ COMPRESSION RATIO:
   Average: ~100:1</pre>
                     </div>
                     <p>
-                        The hybrid HF codec is our best performer in file size, with an average compression 
-                        ratio of ~100:1. However, it underperforms JPEG on both PSNR and SSIMfor each image tested. 
+                        The hybrid HF codec is our best all around performer, with an average compression 
+                        ratio of ~100:1. It also was had our best average PSNR compared to JPEG and not a bad SSIM either.
+                        However, it still underperforms JPEG on both metrics for each image that was tested. 
                         The main reason for this is our encoder wastes bits on zeros, after quantization,
                         most DCT blocks are filled with zeros, and our Huffman coder still encodes them as symbols.
                         JPEG handles this cleaner by simply stopping when it hits trailing zeros in a block.
