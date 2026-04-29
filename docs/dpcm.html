@@ -51,11 +51,11 @@
                             <img src="assets/dpcm-pipeline.png" alt="DPCM pipeline" class="plot-image">
                         </div>
                         <figcaption>
-                            DPCM pipeline applied to DC coefficients: differences are computed and then encoded for compression.
+                            DPCM pipeline applied to the DC coefficients: differences are computed and then encoded for compression.
                         </figcaption>
                     </figure>
                     <p>
-                        This pipeline shows how DPCM compresses DC coefficients by encoding differences between neighboring blocks. These differences are easier to compress using entropy coding, and the original values are later reconstructed by reversing the process.
+                        This pipeline shows how DPCM compresses DC coefficients by encoding differences between neighboring blocks. These differences are easier to compress using entropy coding, and the original values are later reconstructed.
                     </p>
                 </section>
 
@@ -95,7 +95,7 @@
                         </pre>
                         
                         <p>
-                            These smaller difference values replace the original DC values and are what get passed to entropy coding. Entropy coding methods such as Huffman coding can represent them using fewer bits.
+                            These smaller difference values replace the original DC values and are what get passed to entropy coding. Entropy coding methods such as Huffman coding can represent them using fewer bits which lead to a reduced file size.
                         </p>
                     
                     <figure class="doc-figure-slot">
@@ -108,14 +108,14 @@
                     </figure>
                     <ul>
                         <li>The top plot shows the original DC coefficients, which vary smoothly across neighboring block indices.</li>
-                        <li>This smooth variation indicates strong spatial correlation and redundancy in the image.</li>
+                        <li>This smooth variation indicates strong spatial similarity and redundancy in the image.</li>
                         <li>The bottom plot shows the DPCM differences, which are much smaller in magnitude.</li>
-                        <li>Most of these values are clustered near zero, indicating reduced variation.</li>
-                        <li>The first value is large because it stores the initial reference (anchor) to enable reconstruction.</li>
+                        <li>Most of these values are clustered near zero.</li>
+                        <li>The first value is large because it stores the initial reference (anchor) to enable reconstruction later on.</li>
                     </ul>
                     
                     <p>
-                        Overall, DPCM reduces redundancy by converting a smooth signal into small, near-zero differences, making the data more efficient to compress.
+                        Overall, DPCM reduces redundancy by converting a smooth signal into small, near zero differences, making the data more efficient to compress.
                     </p>
                 </section>
 
@@ -131,7 +131,7 @@
                     </p>
                 
                     <p>
-                        <strong>Summary:</strong> DPCM improves compression efficiency by encoding differences instead of absolute values, reducing redundancy in the DC signal.
+                        <strong>Summary:</strong> DPCM improves compression efficiency by encoding differences, reducing redundancy in the DC signal.
                     </p>
                 </section>
             </main>
