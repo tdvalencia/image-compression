@@ -4,14 +4,14 @@
     <!-- styles: same design tokens & components as before, now in css/site.css for all pages -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>home</title>
+    <title>Home | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body class="site-shell">
 
     <nav>
         <div class="container nav-content">
-            <div class="logo"><a href="index.html">image compression</a></div>
+            <div class="logo"><a href="index.html">Image compression</a></div>
             <div class="nav-links">
                 <a href="https://github.com/tdvalencia/image-compression" class="btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);">github</a>
             </div>
@@ -38,7 +38,6 @@
                 <a href="dpcm.html">dpcm</a>
                 <a href="entropy.html">entropy encoders</a>
                 <a href="results.html">results</a>
-                <a href="reflection.html">reflection</a>
                 <a href="references.html">references</a>
             </nav>
         </aside>
@@ -67,12 +66,26 @@
                         <figcaption>Figure 1: JPEG compression of PNG image. Source: <a href="https://techterms.com/definition/lossy">TechTerms: Lossy</a>.</figcaption>
                     </figure>
                     <p style="color: var(--text-muted); font-size: 1.1rem;">
-                        This project aims to build a <strong>JPEG-esq lossy</strong> image compression codec. 
+                        This project aims to build a <strong>JPEG-esque lossy</strong> image compression codec. 
                         We wanted to learn about image compression through our own implementation
                         of image compression techniques. We used techniques such as the Discrete Cosine Transform (DCT) 
-                        and Singular Value Decomposition (SVD) to create an 16-bit (high dynamic range) image compression 
+                        and Singular Value Decomposition (SVD) to create a 16-bit (high dynamic range) image compression 
                         codec that is close to the performance of the JPEG codec.
                     </p>
+
+                    <div class="grader-cheat-sheet" aria-label="Pipeline tools checklist for graders">
+                        <h2>Grader cheat sheet</h2>
+                        <p>
+                            Below is an explicit list of the signal-processing and entropy tools in our end-to-end pipeline,
+                            so requirements are easy to find without hunting through the technique pages.
+                        </p>
+                        <ul>
+                            <li>DSP Tool 1: Color Decorrelation (PCA/SVD)</li>
+                            <li>DSP Tool 2: Spatial Decorrelation (2D Discrete Cosine Transform)</li>
+                            <li>DSP Tool 3: Frequency Quantization Matrix</li>
+                            <li>Non-Course Tool: Entropy Encoding (Huffman / ANS / Arithmetic)</li>
+                        </ul>
+                    </div>
                 </section>
 
                 <!-- <div class="teaser-grid">
@@ -123,7 +136,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 

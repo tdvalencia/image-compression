@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dct</title>
+    <title>DCT | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body class="site-shell">
 
@@ -42,6 +51,34 @@
 
             <main>
                 <section class="content-section">
+                    <h2>DCT overview</h2>
+                    <p>
+                        The <strong>discrete cosine transform (DCT)</strong> takes a short block of samples and rewrites it as weights on cosine patterns.
+                        Natural image blocks are usually smooth, so most of the weight lands in the first few terms. That is what lets us quantize or zero out high-frequency weights and still get a usable picture.
+                        Baseline JPEG and our pipeline both use a <strong>type-II DCT</strong> with <strong>orthonormal</strong> scaling so the forward and inverse transforms match—the same convention we use in code with <code>dctn</code> and <code>idctn</code>.
+                    </p>
+                    <p>
+                        Start with one row or column of length \(N\). Let \(x[n]\) be the samples for \(n = 0, \ldots, N-1\).
+                        The <strong>forward</strong> DCT is given by the equation:
+                        \[
+                            X[k] = \alpha_k \sum_{n=0}^{N-1} x[n]\,\cos\!\left(\frac{\pi k (2n+1)}{2N}\right), \qquad k = 0,\ldots,N-1,
+                        \]
+                        where \(\alpha_0 = \sqrt{1/N}\) and \(\alpha_k = \sqrt{2/N}\) for \(k \ge 1\).
+                        The \(k = 0\) term is the <strong>DC</strong> coefficient (roughly the average level of the block). Larger \(k\) track sharper changes along that line—higher spatial frequency.
+                    </p>
+                    <p>
+                        The <strong>inverse</strong> DCT rebuilds the samples from those weights. It is given by the equation:
+                        \[
+                            x[n] = \sum_{k=0}^{N-1} \alpha_k\, X[k]\,\cos\!\left(\frac{\pi k (2n+1)}{2N}\right), \qquad n = 0,\ldots,N-1.
+                        \]
+                    </p>
+                    <p>
+                        In our project we apply the DCT in <strong>2D</strong> on each color channel. We do the 1D transform on every row of an \(N \times N\) block, then on every column (either order is fine; the idea is the same).
+                        Each coefficient \(X[k,\ell]\) pairs a horizontal frequency \(k\) with a vertical frequency \(\ell\), which is why smooth areas (lower frequencies) leave most of the energy in the top-left of the \(8\times 8\) coefficient grid.
+                    </p>
+                </section>
+
+                <section class="content-section">
                     <h2>What we use it for</h2>
                     <p>
                         After optional color transforms (see <a href="svd-pca.html">svd / pca</a>), we reshape the image into non-overlapping <strong>8×8</strong> blocks per channel. A <strong>type-II DCT with orthonormal normalization</strong> is applied in 2D on each block so energy concentrates in a few low-frequency coefficients. That concentration is what makes aggressive quantization and run-length coding worthwhile.
@@ -54,7 +91,7 @@
                             <img src="assets/dct-pipeline.png" alt="Simplified DCT compression pipeline" class="plot-image">
                         </div>
                         <figcaption>
-                            DCT pipeline: the image is transformed to the frequency domain, reduced via quantization, and encoded into a compressed file.
+                            Figure 9: DCT pipeline: the image is transformed to the frequency domain, reduced via quantization, and encoded into a compressed file.
                         </figcaption>
                     </figure>
                 </section>
@@ -72,21 +109,21 @@
                         <div class="plot-card">
                             <img src="assets/deer-original.png" alt="Original deer test image" class="plot-image">
                             <div class="plot-details">
-                                <h3>Spatial domain</h3>
+                                <h3>Figure 10: Spatial domain</h3>
                                 <p>Baseline before DCT.</p>
                             </div>
                         </div>
                         <div class="plot-card">
                             <img src="assets/deer-1-coeffs.png" alt="Single coefficient reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>Keep 1 coefficient</h3>
+                                <h3>Figure 11: Keep 1 coefficient</h3>
                                 <p>Keeping only one coefficient illustrates how much energy lives in the DC and lowest AC terms.</p>
                             </div>
                         </div>
                         <div class="plot-card">
                             <img src="assets/deer-3-coeffs.png" alt="Three coefficients reconstruction" class="plot-image">
                             <div class="plot-details">
-                                <h3>Keep 3 coefficients</h3>
+                                <h3>Figure 12: Keep 3 coefficients</h3>
                                 <p>Stepping up retention slightly restores more edge structure for a modest bit cost.</p>
                             </div>
                         </div>
@@ -146,7 +183,7 @@
     
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 

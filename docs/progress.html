@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>progress report</title>
+    <title>Progress report | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body class="site-shell">
@@ -71,7 +71,7 @@
                         <div class="plot-card">
                             <img src="assets/deer-original.png" alt="Original Image of a Deer" class="plot-image">
                             <div class="plot-details">
-                                <h3>1. Original image (spatial domain)</h3>
+                                <h3>Figure 5: Original image (spatial domain)</h3>
                                 <p>This plot displays our baseline test image in grayscale. We loaded this dataset into MATLAB to serve as the visual reference point before applying our mathematical transforms.</p>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                         <div class="plot-card">
                             <img src="assets/deer-8x8-block-coeffs.png" alt="2D DCT of Deer Image" class="plot-image">
                             <div class="plot-details">
-                                <h3>2. 2D DCT of 8×8 blocks (frequency domain)</h3>
+                                <h3>Figure 6: 2D DCT of 8×8 blocks (frequency domain)</h3>
                                 <p>This plot shows our image processed through a 2D DCT in 8×8 blocks. We generated this by applying the transform to shift the spatial data into frequencies. The 2D DCT highlighted central parts where there was more homogenous coloring. The darker edges of the blocks indicate areas where there were sharper edges.</p>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                         <div class="plot-card">
                             <img src="assets/deer-1-coeffs.png" alt="One Coefficient Kept" class="plot-image">
                             <div class="plot-details">
-                                <h3>3. Keeping one DCT coefficient</h3>
+                                <h3>Figure 7: Keeping one DCT coefficient</h3>
                                 <p>This plot displays the DCT compression when we keep one coefficient. If you look closely, the compressed image contains less detail than the original. The original image has a file size of 1165.97 KB while the compressed image has a file size of 171.12 KB. The compressed image is about 15% the size of the original image with only a minor decrease in quality.</p>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 

@@ -395,20 +395,75 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     margin-bottom: 0;
 }
 
-.content-section .reference-list {
+/* --- References page (grouped list boxes) --- */
+.ref-heading {
+    margin: 2.25rem 0 0.85rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+}
+
+.content-section .ref-heading:first-of-type {
+    margin-top: 0.5rem;
+}
+
+.ref-box {
+    margin: 0 0 2.25rem;
+    max-width: 50rem;
+}
+
+.ref-box:last-of-type {
+    margin-bottom: 3rem;
+}
+
+.ref-box.surface-card {
+    padding: 1.75rem 2rem 1.5rem;
+}
+
+.ref-list {
     list-style: none;
-    max-width: 640px;
-    margin: 0 0 1rem;
-    padding-left: 0;
+    margin: 0;
+    padding: 0;
 }
 
-.content-section .reference-list li {
-    margin-bottom: 1rem;
-    padding-left: 0;
+.ref-list li {
+    margin: 0;
+    padding: 1.15rem 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.content-section .reference-list li:last-child {
-    margin-bottom: 0;
+.ref-list li:first-child {
+    padding-top: 0;
+}
+
+.ref-list li:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.ref-list__label {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    margin-bottom: 0.1rem;
+}
+
+.ref-list a {
+    font-size: 0.92rem;
+    word-break: break-word;
+    line-height: 1.45;
+    font-weight: 500;
+}
+
+.ref-list__note {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.45;
 }
 
 .content-section a {
@@ -425,6 +480,43 @@ figure.doc-figure-slot .doc-figure-slot__hint {
     border-radius: 0.75rem;
     padding: 2rem;
     margin-bottom: 2rem;
+}
+
+.grader-cheat-sheet {
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-color));
+}
+
+.grader-cheat-sheet h2 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.35rem;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+}
+
+.grader-cheat-sheet p {
+    margin: 0 0 1rem 0;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 52rem;
+}
+
+.grader-cheat-sheet ul {
+    margin: 0;
+    padding-left: 1.35rem;
+}
+
+.grader-cheat-sheet li {
+    margin-bottom: 0.55rem;
+    color: var(--text-main);
+}
+
+.grader-cheat-sheet li:last-child {
+    margin-bottom: 0;
 }
 
 .lead {

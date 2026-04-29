@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>references</title>
+    <title>References | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body class="site-shell">
@@ -37,25 +37,76 @@
         <div class="main-column">
             <header class="hero hero--compact">
                 <h1>References</h1>
-                <p>Resources and related course material.</p>
+                <p>Articles, docs, and resources we used while building the codec and site.</p>
             </header>
 
             <main>
-                <section class="content-section surface-card" style="padding: 0; border: none;">
-                    <ul class="reference-list">
-                        <li>
-                            <strong style="color: var(--text-main);">Test images &amp; benchmarks</strong><br>
-                            <a href="https://imagecompression.info">imagecompression.info</a>: standard datasets and competition context for image compression.
-                        </li>
-                        <li>
-                            <strong style="color: var(--text-main);">Course project format (example)</strong><br>
-                            <a href="https://sites.google.com/umich.edu/eecs351-jwst-diffraction/home">EECS 351, JWST diffraction removal (Team 2, Fall 2024)</a>: site structure inspiration for this project page.
-                        </li>
-                        <li>
-                            <strong style="color: var(--text-main);">Codebase</strong><br>
-                            <a href="https://github.com/tdvalencia/image-compression">github.com/tdvalencia/image-compression</a>
-                        </li>
-                    </ul>
+                <section class="content-section">
+                    <p class="lead">
+                        External links open in a new tab. Each line is a short label; the link text opens the source.
+                    </p>
+
+                    <h2 class="ref-heading">Tutorials &amp; techniques</h2>
+                    <div class="ref-box surface-card">
+                        <ul class="ref-list">
+                            <li>
+                                <strong class="ref-list__label">Arithmetic coding</strong>
+                                <a href="https://go-compression.github.io/algorithms/arithmetic/" target="_blank" rel="noopener noreferrer">The Hitchhiker’s Guide to Compression — Arithmetic coding</a>
+                                <span class="ref-list__note">Interval-based coding and finite-precision considerations.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">Asymmetric numeral systems (ANS)</strong>
+                                <a href="https://bjlkeng.io/posts/lossless-compression-with-asymmetric-numeral-systems/" target="_blank" rel="noopener noreferrer">Lossless compression with asymmetric numeral systems (bjlkeng.io)</a>
+                                <span class="ref-list__note">Blog post on ANS-style entropy coding.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">Discrete cosine transform</strong>
+                                <a href="https://www.mathworks.com/help/images/discrete-cosine-transform.html" target="_blank" rel="noopener noreferrer">MathWorks — Discrete cosine transform</a>
+                                <span class="ref-list__note">Documentation on the DCT in image processing.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">Huffman coding</strong>
+                                <a href="https://www.geeksforgeeks.org/dsa/huffman-coding-greedy-algo-3/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — Huffman coding algorithm</a>
+                                <span class="ref-list__note">Greedy tree construction and prefix codes.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">Image compression with PCA</strong>
+                                <a href="https://medium.com/@bitwise_insights/implementing-image-compression-using-principal-component-analysis-e54d97a257e8" target="_blank" rel="noopener noreferrer">Medium — Implementing image compression using PCA</a>
+                                <span class="ref-list__note">PCA-oriented compression write-up.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">Singular value decomposition</strong>
+                                <a href="https://www.geeksforgeeks.org/data-science/singular-value-decomposition-svd/" target="_blank" rel="noopener noreferrer">GeeksforGeeks — Singular value decomposition (SVD)</a>
+                                <span class="ref-list__note">Factorization, intuition, and imaging applications.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">JentGent's Video Explaining Huffman, Arithmetic, and ANS Encodings</strong>
+                                <a href="https://youtu.be/RFWJM8JMXBs?si=aSguQ7tV1wH2OrPX" target="_blank" rel="noopener noreferrer">YouTube — supplementary lecture</a>
+                                <span class="ref-list__note">External video used alongside the notes above.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <h2 class="ref-heading">Data, context &amp; inspiration</h2>
+                    <div class="ref-box surface-card">
+                        <ul class="ref-list">
+                            <li>
+                                <strong class="ref-list__label">Test images &amp; benchmarks</strong>
+                                <a href="https://imagecompression.info" target="_blank" rel="noopener noreferrer">imagecompression.info</a>
+                                <span class="ref-list__note">Standard datasets and compression benchmarks.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">This repository</strong>
+                                <a href="https://github.com/tdvalencia/image-compression" target="_blank" rel="noopener noreferrer">github.com/tdvalencia/image-compression</a>
+                                <span class="ref-list__note">Codec source, benchmarks, and documentation.</span>
+                            </li>
+                            <li>
+                                <strong class="ref-list__label">EECS 351 example project site</strong>
+                                <a href="https://sites.google.com/umich.edu/eecs351-jwst-diffraction/home" target="_blank" rel="noopener noreferrer">JWST diffraction removal (Team 2, Fall 2024)</a>
+                                <span class="ref-list__note">Peer site that inspired parts of our layout.</span>
+                            </li>
+                        </ul>
+                    </div>
                 </section>
             </main>
         </div>
@@ -63,7 +114,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 

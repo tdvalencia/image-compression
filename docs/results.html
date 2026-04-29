@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results | Image Compression | EECS 351</title>
+    <title>Results | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body class="site-shell">
@@ -53,7 +53,26 @@
                 </section>
 
                 <section class="content-section">
-                    <h2>Hybrid HF Codec</h2>
+                    <h2>Experiment setup</h2>
+                    <p>
+                        Benchmarks are produced by <code>codec/compare_to_jpeg.py</code> over <strong>14</strong> RGB images in
+                        <code>images/rgb16bit/</code> (16-bit PPM). Each image is loaded and preprocessed with the same
+                        <code>load_and_preprocess_image</code> path as the encoders (including crop to a multiple of 8×8).
+                        Our codec writes a <code>.uofm</code> container; <strong>compression ratio</strong> is the original
+                        uncompressed PPM size divided by that file size (and we report per-codec best/worst/average ratios
+                        across the set). For a rate-matched baseline, we encode the same image with Pillow’s JPEG
+                        (standard 8-bit path) and sweep quality <code>Q = 1…100</code>, picking the <code>Q</code> whose
+                        output size is closest to our codec’s byte count for that image. <strong>PSNR</strong> is computed
+                        in the benchmark script from MSE on the float RGB images (peak value 1.0). <strong>SSIM</strong> uses
+                        <code>scikit-image</code> (<code>data_range=1.0</code>, <code>win_size=5</code>)
+                        on full-resolution float RGB in <code>[0, 1]</code>: the reference is the preprocessed 16-bit image
+                        scaled by 1/65535, and our reconstruction is decoded 16-bit scaled the same way; the JPEG reconstruction
+                        is 8-bit decoded and scaled by 1/255, cropped if needed so height and width match for the metric.
+                    </p>
+                </section>
+
+                <section class="content-section">
+                    <h2>Hybrid Huffman Codec</h2>
                     <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
                         <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
 AVERAGES (Custom / JPEG):
@@ -66,18 +85,12 @@ COMPRESSION RATIO:
   Average: ~100:1</pre>
                     </div>
                     <p>
-                        The hybrid HF codec is our best all around performer, with an average compression 
-                        ratio of ~100:1. It also had our best average PSNR compared to JPEG and a competitive SSIM.
-                        However, it still underperforms JPEG on both metrics for each image that was tested. 
-                        The main reason for this is our encoder wastes bits on zeros, after quantization,
-                        most DCT blocks are filled with zeros, and our Huffman coder still encodes them as symbols.
-                        JPEG handles this cleaner by simply stopping when it hits trailing zeros in a block.
-                        Adding this feature would free up bits and directly improve quality.
+                        The hybrid Huffman codec is our strongest <strong>all-around</strong> codec if you care about compression ratio first: about <strong>100:1</strong> on average versus ~78:1 (DCT Huffman) and ~60:1 (DCT ANS). At the matched JPEG bitrates in this benchmark it still <strong>trails JPEG</strong> on both PSNR and SSIM on every image. Among our three variants, the hybrid path also has the <strong>lowest</strong> average custom PSNR and SSIM at those points—roughly what we expect when we push rate harder than the DCT-only pipelines. The main limiter we see is <strong>wasted bits on zeros</strong>: after quantization, many DCT blocks are mostly zeros, but our encoder still represents them symbol-by-symbol where baseline JPEG effectively ends the block when the zig-zag hits trailing zeros. A similar <strong>EOB</strong>-style shortcut would free bits and help quality.
                     </p>
                 </section>
 
                 <section class="content-section">
-                    <h2>DCT HF Codec</h2>
+                    <h2>DCT Huffman Codec</h2>
                     <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start;">
                         <pre style="overflow-x: auto; font-size: 0.8rem; line-height: 1.6; flex: 1; min-width: 260px;">
 AVERAGES (Custom / JPEG):
@@ -90,10 +103,10 @@ COMPRESSION RATIO:
   Average:  ~78:1</pre>
                     </div>
                     <p>
-                        The DCT HF codec averages a ~78:1 compression ratio and was the only codec to beat
-                        JPEG on a quality metric, it outperformed JPEG on SSIM on <strong>fireworks.ppm</strong>
-                        (0.9364 vs 0.9060). But it still lost to JPEG on every other test image. This is due to 
-                        quantization, JPEG's quantization tables have been fine tuned over decades. Ours is a bit more 
+                        The DCT Huffman codec averages a ~78:1 compression ratio and was the only codec to beat
+                        JPEG on a quality metric: it outperformed JPEG on SSIM on <strong>fireworks.ppm</strong>
+                        (0.9364 vs 0.9060). But it still lost to JPEG on every other test image. This is largely due to
+                        <strong>quantization</strong>: JPEG's quantization tables have been fine tuned over decades. Ours is a bit more 
                         uniform, so we end up throwing away some of the wrong information and losing quality we didn't need to.
                     </p>
                 </section>
@@ -113,10 +126,11 @@ COMPRESSION RATIO:
                     </div>
                     <p>
                         The DCT ANS codec yielded the largest file sizes of the three, averaging a ~60:1
-                        compression ratio. It performed the worst on PSNR and essentially tied with DCT HF for best SSIM. 
-                        Like the other two codecs, a lot of the bloat comes from how we handle zeros after quantization,
-                        we're still encoding when we don't need to, and especially with ANS that inefficiency adds up more than 
-                        it does with Huffman.
+                        compression ratio. It performed the worst on PSNR and essentially tied with DCT Huffman for best SSIM. 
+                        Like the other two codecs, a lot of the bloat comes from how we handle zeros after quantization—we still
+                        encode symbols we could skip. In our tests, <code>simple_ans</code> also adds noticeable
+                        <strong>metadata and state overhead</strong> compared to raw Huffman bytes, so the theoretical ANS rate win did not show up
+                        until the rest of the bitstream is tightened—not because ANS is inherently worse than Huffman in principle.
                     </p>
                     <p>
                         Still, ANS (Asymmetric Numeral Systems) is typically one of the best entropy coders
@@ -145,7 +159,7 @@ COMPRESSION RATIO:
                             tables would improve quality without touching anything else.
                         </li>
                         <li>
-                            <strong>The arithmetic encoder has a precision bug and had to be discluded from this page.</strong> 
+                            <strong>The arithmetic encoder has a precision bug and was excluded from this page.</strong> 
                             Our DCT AE codec crashes on every image we tested. The issue is that when there are a lot of unique 
                             symbols, the probabilities get so small that the floating point math breaks down. It gave errors during testing,
                             which is unfortunate since arithmetic coding is theoretically more efficient than Huffman. Getting this working 
@@ -158,7 +172,7 @@ COMPRESSION RATIO:
                     <h2>Appendix — Raw Benchmark Output</h2>
                     <p>Full test suite output for each codec across all 14 images.</p>
 
-                    <h3>Hybrid HF Codec</h3>
+                    <h3>Hybrid Huffman Codec</h3>
                     <pre style="overflow-x: auto; font-size: 0.75rem; line-height: 1.5;">
 --- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
 Target Directory: images/rgb16bit/
@@ -187,7 +201,7 @@ FINAL TALLY:
  
                     </pre>
 
-                    <h3>DCT HF Codec</h3>
+                    <h3>DCT Huffman Codec</h3>
                     <pre style="overflow-x: auto; font-size: 0.75rem; line-height: 1.5;">
 --- COMPREHENSIVE RATE-DISTORTION BENCHMARK ---
 Target Directory: images/rgb16bit/
@@ -252,7 +266,7 @@ FINAL TALLY:
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 

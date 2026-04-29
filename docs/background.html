@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background | Image Compression | EECS 351</title>
+    <title>Background | Image compression</title>
     <link rel="stylesheet" href="css/site.css">
 </head>
 <body class="site-shell">
@@ -53,7 +53,7 @@
                         <div class="doc-figure-slot__media">
                             <img src="assets/big_building.jpeg" alt="Big Building image">
                         </div>
-                        <figcaption>Figure X: This is a big building image from the dataset.</figcaption>
+                        <figcaption>Figure 2: This is a big building image from the dataset.</figcaption>
                     </figure>
                 </section>
 
@@ -95,7 +95,7 @@
                         <div class="doc-figure-slot__media">
                             <img src="assets/jpeg pipeline.png" alt="JPEG pipeline diagram">
                         </div>
-                        <figcaption>Figure X: DCT-based JPEG encoder processing steps. Source: <a href="https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/jpeg/jpeg/encoder.htm">CMLAB NTU</a>.</figcaption>
+                        <figcaption>Figure 3: DCT-based JPEG encoder processing steps. Source: <a href="https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/jpeg/jpeg/encoder.htm">CMLAB NTU</a>.</figcaption>
                     </figure>
                     <p>
                         Our project reuses the same conceptual ordering (transform, quantize, separate DC path, entropy code) but swaps in our own color front-end, tables, and file container where we experiment.
@@ -103,9 +103,9 @@
                 </section>
 
                 <section class="content-section">
-                    <h2>How <code>hybrid_hf_compression</code> works</h2>
+                    <h2>How our favorite pipeline works</h2>
                     <p>
-                        The hybrid pipeline in <code>codec/pipelines/hybrid_hf_compression.py</code> is our main end-to-end codec. It is designed to mirror JPEG’s block-DCT + DC prediction + Huffman story, but it operates on <strong>PCA-decorrelated “eigen-channels”</strong> instead of YCbCr and writes a custom <code>.uofm</code> container. Encoder order:
+                        The hybrid pipeline in <code>codec/pipelines/hybrid_hf_codec.py</code> is our main end-to-end codec. It is designed to mirror JPEG’s block-DCT + DC prediction + Huffman story, but it operates on <strong>PCA-decorrelated “eigen-channels”</strong> instead of YCbCr and writes a custom <code>.uofm</code> container. Encoder order:
                     </p>
                     <ol>
                         <li><strong>Load.</strong> Read the 16-bit RGB image and crop to a multiple of 8 (same preprocessing idea as above).</li>
@@ -139,7 +139,7 @@
                         <div class="doc-figure-slot__media">
                             <img src="assets/hybrid svd dct pipeline.png" alt="Hybrid HF Compression overview">
                         </div>
-                        <figcaption>Figure X: This is a hybrid <code>hybrid_hf_compression</code> overview.</figcaption>
+                        <figcaption>Figure 4: This is a hybrid <code>hybrid_hf_codec</code> overview.</figcaption>
                     </figure>
                     <p>
                         <strong>Decoding</strong> loads the container, Huffman-decodes the two streams, inverts DPCM to recover DCs, merges DCs with decoded AC zig-zag data into 8×8 blocks, dequantizes with the same per-channel scaling, inverse DCT, unblock, then inverse PCA to return RGB. Metrics (PSNR, SSIM) compare the reconstructed 16-bit image to the preprocessed original on a 0 to 1 float scale.
@@ -151,7 +151,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 image compression · EECS 351 · University of Michigan</p>
+            <p>© 2026 Image compression · University of Michigan</p>
         </div>
     </footer>
 
