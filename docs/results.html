@@ -146,9 +146,9 @@ COMPRESSION RATIO:
                             tables would improve quality without touching anything else.
                         </li>
                         <li>
-                            <strong>The arithmetic encoder has a precision bug and had to be discluded from this page</strong> 
+                            <strong>The arithmetic encoder has a precision bug and had to be discluded from this page.</strong> 
                             Our DCT AE codec crashes on every image we tested. The issue is that when there are a lot of unique 
-                            symbols, the probabilities get so small that the floating point math breaks down. It never worked in testing,
+                            symbols, the probabilities get so small that the floating point math breaks down. It gave errors during testing,
                             which is unfortunate since arithmetic coding is theoretically more efficient than Huffman. Getting this working 
                             properly would be a big step forward and could be the final push we need to pass JPEG.
                         </li>
